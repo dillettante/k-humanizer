@@ -1,0 +1,7 @@
+{
+  "kind": "gate",
+  "before": "protected-before.txt",
+  "after": "protected-safe-after.txt",
+  "target_rules": ["KH-S02"],
+  "expected_status": "통과"
+}

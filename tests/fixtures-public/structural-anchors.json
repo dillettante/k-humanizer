@@ -1,0 +1,5 @@
+{
+  "kind": "scan",
+  "before": "structural-anchors.txt",
+  "minimum_counts": {"KH-S03": 3, "KH-S08": 1, "KH-S09": 3}
+}

@@ -1,0 +1,5 @@
+{
+  "kind": "scan",
+  "before": "clean-quoted.txt",
+  "absent_rules": ["KH-S02"]
+}

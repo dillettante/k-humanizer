@@ -1,0 +1,6 @@
+{
+  "kind": "scan",
+  "before": "translation.txt",
+  "translation_source": true,
+  "minimum_counts": {"KH-S06": 1}
+}

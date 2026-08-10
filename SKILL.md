@@ -10,14 +10,14 @@ description: "한국어 초안에서 번역투, 기계적 병렬, 결산 상투�
 ## 작업 흐름
 
 1. 요청을 `진단`, `윤문`, `검증`, `조사` 가운데 하나로 정한다. AI 같은 문체·AI 티·ChatGPT 문체를 줄여 달라는 요청은 저자 판별이 아니라 **문체 표지 진단·윤문**으로 처리한다.
-2. 장르, 번역 원문 유무, 목표 문체, 그리고 초고·사람이 다듬은 글 여부처럼 꼭 필요한 맥락만 확인한다.
+2. 장르, 번역 원문 유무, 목표 문체, 그리고 초고·사람이 다듬은 글 여부처럼 꼭 필요한 맥락만 확인한다. 입력·보호값 지정은 references/input-contract.md를 따른다.
 3. 단행본·연재물·상당한 분량의 장이라면 독자, 글의 일, 목소리, 보호 개념어, 덜어낼 습관, 예외 영역을 담은 편집 브리프를 만든다.
-4. 수치, 날짜, 이름, 직접 인용, 법률·학술 용어, 인용 정보, 사용자가 지정한 구간을 보호한다.
-5. `references/ai-style-taxonomy.md`에서 해당 프로필의 표지, 문맥 조건, 보존 반례, 처방을 확인한다. 결정 가능한 문형 또는 위치가 확인된 예문이 있을 때만 문제를 지적한다. 근거 없는 횟수는 말하지 않는다.
+4. 수치, 날짜, 이름, 직접 인용, 법률·학술 용어, 인용 정보, 사용자가 지정한 구간을 보호한다. scripts/verify_protected_spans.py로 전후 exact-match를 확인하되, 이 검사가 의미 보존 전체는 아님을 밝힌다.
+5. references/ai-style-taxonomy.md에서 해당 프로필의 표지, 문맥 조건, 보존 반례, 처방을 확인한다. 결정적 앵커가 필요한 빠른 점검은 references/quick-rules.md와 scripts/scan_style.py를 쓴다. 스캔 결과는 위치 후보일 뿐, 근거 없는 횟수·저자 추정을 말하지 않는다.
 6. 모든 지적을 `수정`, `유지`, `확인 요청`으로 나눈다. 논증 순서, 출처 귀속, 등장인물 말투, 의도한 형식 효과를 바꿀 수 있으면 `확인 요청`으로 둔다.
 7. 고칠 후보와 지켜야 할 까닭을 함께 보고한다. 짧은 글 기준에서 걸렸다는 이유만으로 의도한 호흡·병렬·반복을 지우지 않는다.
-8. 근거가 있는 수정만 한다. 표지별 처방은 `remove`, `reshape`, `preserve`, `ask` 가운데 하나를 고른다. 변경 기록을 남기고 미해결 항목은 저자에게 확인한다.
-9. 수정 뒤 보호 구간, 사실의 긍정·부정, 주체, 양태, 누락, 문체와 대상 표지의 잔존·과교정을 다시 확인한다. 출력 계약은 `references/runtime-contract.md`, 평가 기준은 `references/evaluation-contract.md`를 따른다.
+8. 근거가 있는 수정만 한다. 표지별 처방은 remove, reshape, preserve, ask 가운데 하나를 고른다. references/rewriting-playbook.md를 읽고 변경 기록을 남기며, 미해결 항목은 저자에게 확인한다.
+9. 수정 뒤 보호 구간, 사실의 긍정·부정, 주체, 양태, 누락, 문체와 대상 표지의 잔존·과교정을 다시 확인한다. scripts/verify_style_gate.py로 보호값과 목표 표지의 전후 차이를 확인하고, scripts/measure_edit.py의 변경률은 경보용으로만 쓴다. 출력 계약은 references/runtime-contract.md, 평가 기준은 references/evaluation-contract.md를 따른다.
 
 산문과 번역문의 판단 순서는 [references/prose-review-principles.md](references/prose-review-principles.md)를 따른다. 이 문서는 목표 문체나 점수표가 아니라 판단 보조 도구다.
 

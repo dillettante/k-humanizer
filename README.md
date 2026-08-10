@@ -38,6 +38,17 @@ AI 티가 나는 상투적 전개·기계적 병렬·번역투만 진단해 줘.
 확실한 번역투만 최소 수정해 줘.
 ```
 
+## 결정적 안전 검사
+
+스킬에는 모델의 문맥 판단을 대체하지 않는 작은 검사기가 함께 들어 있습니다. 직접 인용·날짜·수치·조문 보존과, 지정한 문체 표지의 전후 변화를 확인할 때 씁니다.
+
+    python3 scripts/scan_style.py --input draft.txt
+    python3 scripts/verify_style_gate.py --before draft.txt --after edited.txt --target-rule KH-S02
+
+번역 원문이 실제로 제공됐을 때만 scan_style.py에 --translation-source를 붙입니다. 전체 자작 공개 fixture는 다음으로 검증할 수 있습니다.
+
+    python3 scripts/run_regression.py
+
 ## 설치
 
 ### Claude Code · Codex · Hermes
