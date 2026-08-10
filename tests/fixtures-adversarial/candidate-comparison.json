@@ -1,0 +1,10 @@
+{
+  "kind": "comparison",
+  "before": "comparison-before.txt",
+  "candidates": {
+    "preserved": "comparison-safe.txt",
+    "protected-loss": "comparison-loss.txt"
+  },
+  "target_rules": ["KH-S02"],
+  "eligible_candidates": ["preserved"]
+}

@@ -1,0 +1,5 @@
+{
+  "kind": "scan",
+  "before": "quoted-anchors.txt",
+  "absent_rules": ["KH-S02", "KH-S03"]
+}

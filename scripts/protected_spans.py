@@ -26,6 +26,8 @@ def protected_spans(text: str, extra_values: list[str] | None = None) -> list[di
     seen: set[tuple[int, int, str]] = set()
     for kind, pattern in PATTERNS:
         for match in pattern.finditer(text):
+            if kind == "number" and any(match.start() < int(span["end"]) and match.end() > int(span["start"]) for span in spans):
+                continue
             key = (match.start(), match.end(), kind)
             if key not in seen:
                 spans.append({"kind": kind, "start": match.start(), "end": match.end(), "value": match.group(0)})

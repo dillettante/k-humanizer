@@ -17,7 +17,7 @@ description: "한국어 초안에서 번역투, 기계적 병렬, 결산 상투�
 6. 모든 지적을 `수정`, `유지`, `확인 요청`으로 나눈다. 논증 순서, 출처 귀속, 등장인물 말투, 의도한 형식 효과를 바꿀 수 있으면 `확인 요청`으로 둔다.
 7. 고칠 후보와 지켜야 할 까닭을 함께 보고한다. 짧은 글 기준에서 걸렸다는 이유만으로 의도한 호흡·병렬·반복을 지우지 않는다.
 8. 근거가 있는 수정만 한다. 표지별 처방은 remove, reshape, preserve, ask 가운데 하나를 고른다. references/rewriting-playbook.md를 읽고 변경 기록을 남기며, 미해결 항목은 저자에게 확인한다.
-9. 수정 뒤 보호 구간, 사실의 긍정·부정, 주체, 양태, 누락, 문체와 대상 표지의 잔존·과교정을 다시 확인한다. scripts/verify_style_gate.py로 보호값과 목표 표지의 전후 차이를 확인하고, scripts/measure_edit.py의 변경률은 경보용으로만 쓴다. 출력 계약은 references/runtime-contract.md, 평가 기준은 references/evaluation-contract.md를 따른다.
+9. 수정 뒤 보호 구간, 사실의 긍정·부정, 주체, 양태, 누락, 문체와 대상 표지의 잔존·과교정을 다시 확인한다. scripts/verify_style_gate.py로 보호값과 목표 표지의 전후 차이를 확인하고, scripts/measure_edit.py의 변경률은 경보용으로만 쓴다. 두 윤문 후보를 비교할 때에는 references/comparison-protocol.md와 scripts/compare_candidates.py를 사용하고, gate 통과 뒤에도 사람 검토 없이 우열을 단정하지 않는다. 출력 계약은 references/runtime-contract.md, 평가 기준은 references/evaluation-contract.md를 따른다.
 
 산문과 번역문의 판단 순서는 [references/prose-review-principles.md](references/prose-review-principles.md)를 따른다. 이 문서는 목표 문체나 점수표가 아니라 판단 보조 도구다.
 

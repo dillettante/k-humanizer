@@ -9,10 +9,14 @@ import sys
 from pathlib import Path
 
 from scan_style import scan
+from compare_candidates import compare
 from verify_style_gate import gate
 
 
-DEFAULT_FIXTURES = Path(__file__).resolve().parent.parent / "tests" / "fixtures-public"
+DEFAULT_FIXTURE_DIRS = (
+    Path(__file__).resolve().parent.parent / "tests" / "fixtures-public",
+    Path(__file__).resolve().parent.parent / "tests" / "fixtures-adversarial",
+)
 
 
 def text_at(fixture: Path, name: str) -> str:
@@ -31,6 +35,12 @@ def run_fixture(fixture: Path) -> dict[str, object]:
     elif config["kind"] == "gate":
         result = gate(before, text_at(fixture, str(config["after"])), list(config.get("target_rules", [])), translation_source=bool(config.get("translation_source")), extra_values=None)
         failures = [] if result["status"] == config["expected_status"] else [f"expected {config['expected_status']}, got {result['status']}"]
+    elif config["kind"] == "comparison":
+        candidates = {str(name): text_at(fixture, str(path)) for name, path in config["candidates"].items()}
+        result = compare(before, candidates, list(config.get("target_rules", [])), translation_source=bool(config.get("translation_source")), extra_values=None)
+        expected = sorted(config["eligible_candidates"])
+        actual = sorted(result["eligible_candidates"])
+        failures = [] if actual == expected else [f"expected eligible {expected}, got {actual}"]
     else:
         return {"fixture": fixture.name, "status": "failed", "failures": ["unknown fixture kind"]}
     return {"fixture": fixture.name, "status": "passed" if not failures else "failed", "failures": failures}
@@ -38,9 +48,10 @@ def run_fixture(fixture: Path) -> dict[str, object]:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--fixtures", type=Path, default=DEFAULT_FIXTURES)
+    parser.add_argument("--fixtures", type=Path, action="append", help="fixture directory; repeatable")
     args = parser.parse_args()
-    fixtures = sorted(args.fixtures.glob("*.json"))
+    fixture_dirs = args.fixtures or list(DEFAULT_FIXTURE_DIRS)
+    fixtures = [path for directory in fixture_dirs for path in sorted(directory.glob("*.json"))]
     if not fixtures:
         print("no fixtures found", file=sys.stderr)
         return 1
