@@ -102,7 +102,16 @@ Markdown 인용 블록은 기본적으로 스캔에서 제외합니다. 조문·
 
 ## 설치
 
-### Claude Code · Codex · Hermes
+### 먼저, 내 환경 고르기
+
+| 사용하는 제품 | 권장 경로 | 알아둘 점 |
+| --- | --- | --- |
+| Claude Code · Codex · Hermes | 아래의 로컬 설치 | 스크립트와 결정적 검사를 모두 사용할 수 있습니다. |
+| Claude.ai | custom skill ZIP 업로드 | Code execution and file creation을 켜야 합니다. |
+| ChatGPT의 Skills | skill ZIP 업로드 | 지원 플랜·워크스페이스 권한이 필요합니다. |
+| Claude.ai Project · ChatGPT 맞춤 GPT | 지침·참고자료를 직접 넣기 | 대안 경로이며, 번들 스크립트의 자동 실행은 보장하지 않습니다. |
+
+### Claude Code · Codex · Hermes (로컬 설치)
 
 이 저장소를 한 번 내려받은 뒤 설치 스크립트를 실행합니다. 스크립트는 현재 저장소를 공통 경로 `~/.agents/skills/k-humanizer`에 연결하고, 선택한 런타임의 스킬 경로에 다시 연결합니다. 기존 `k-humanizer` 설치를 덮어쓰지 않습니다.
 
@@ -130,9 +139,37 @@ cd k-humanizer
 
 새 세션에서 `K-humanizer` 또는 `$k-humanizer`를 언급하거나, 한국어 산문·번역문 최소 윤문을 자연어로 요청하세요.
 
-### ChatGPT
+### Claude.ai (웹·데스크톱 대화형 Claude)
 
-ChatGPT의 **Plugins → Skills → Create → Upload**에서 이 저장소를 내려받은 폴더(또는 그 ZIP 파일)를 올려 설치합니다. ChatGPT의 개인 스킬은 데스크톱과 웹·모바일에 각각 따로 설치됩니다. 계정·워크스페이스 권한에 따라 Skills 또는 업로드 메뉴가 보이지 않을 수 있습니다.
+Claude.ai에서는 이 저장소를 custom skill로 올릴 수 있습니다. 개인 계정은 **Settings → Capabilities**에서 Code execution and file creation을 켠 뒤, **Customize → Skills → + Create skill → Upload a skill**로 들어갑니다. Team·Enterprise는 조직 관리자가 Skills와 Code execution을 먼저 켜야 할 수 있습니다. 업로드한 skill은 개인 계정에만 적용되며, Team·Enterprise에서는 별도 공유 기능을 사용할 수 있습니다. [Claude 공식 안내](https://support.claude.com/en/articles/12512180-use-skills-in-claude)를 따르세요.
+
+업로드 파일은 `k-humanizer/` 폴더가 최상위에 있고 그 안에 `SKILL.md`가 있는 ZIP이어야 합니다. 터미널을 쓸 수 있다면 아래처럼 만듭니다.
+
+```bash
+git clone https://github.com/dillettante/k-humanizer.git
+zip -r k-humanizer.zip k-humanizer -x '*/.git/*' '*/__pycache__/*'
+```
+
+터미널을 쓰지 않는다면 GitHub의 **Code → Download ZIP**으로 받은 파일을 푼 뒤, 최상위 폴더 이름을 `k-humanizer`로 바꾸고 그 폴더를 다시 ZIP으로 압축하세요. 업로드 후 Skills 목록에서 켠 다음, “K-humanizer를 사용해 이 글을 보수적으로 윤문해 줘”처럼 요청합니다.
+
+### ChatGPT Skills (웹·모바일·데스크톱 대화형 ChatGPT)
+
+Skills가 보이는 계정에서는 위에서 만든 같은 ZIP을 올릴 수 있습니다. **Plugins → Skills → Create → Upload**를 열어 업로드한 뒤 활성화하세요. 현재 개인 Skills는 일반적으로 ChatGPT Business·Enterprise·Healthcare·Edu에서 제공되며, Enterprise·Edu에서는 관리자가 Skills와 업로드 권한을 켜야 합니다. 개인 Skills는 데스크톱과 웹·모바일 사이에 자동 동기화되지 않으므로 사용하는 화면마다 설치합니다. [ChatGPT 공식 안내](https://help.openai.com/en/articles/20001066)를 확인하세요.
+
+### Skills 메뉴가 없을 때: 대화형 대안
+
+이 경로는 스킬을 설치하는 것은 아니지만, 같은 작업 원칙을 지속해서 쓰는 실용적인 방법입니다.
+
+- **Claude.ai:** Project를 만들고 `SKILL.md`의 작업 원칙을 Project instructions에 넣습니다. 필요한 `references/*.md`만 Project knowledge에 올립니다. [Claude Projects](https://support.claude.com/en/articles/9517075-what-are-projects)는 파일과 프로젝트별 지침을 지원합니다.
+- **ChatGPT:** 맞춤 GPT를 만들 수 있는 계정이라면 Instructions에 `SKILL.md`의 핵심 작업 흐름을 넣고, 필요한 `references/*.md`를 Knowledge로 올립니다. 맞춤 GPT는 지침과 업로드 자료를 지원하지만, 이 저장소의 Python 검사가 자동 실행된다고 가정하면 안 됩니다. [GPT 만들기 안내](https://help.openai.com/en/articles/8554397-use-advanced-data-analysis-in-chatgpt)를 참고하세요.
+- **일반 채팅:** 원고를 첨부하고 아래 요청문을 매번 함께 보냅니다. 긴 원고는 한 번에 전문 검토를 주장하지 말고, 장·절 단위로 나눠 범위를 기록합니다.
+
+```text
+이 원고를 K-humanizer 원칙으로 진단해 줘. AI 저자 판별이나 탐지 회피는 하지 말고,
+번역투·기계적 병렬·결산 상투구·과잉 완곡만 문맥에 따라 검토해 줘.
+직접 인용·수치·날짜·조문 인용 표기는 보존하고, 각 항목을 수정·유지·확인 요청으로 나눠
+이유와 보존 반례를 적어 줘. 전문을 읽지 않았다면 그 범위를 명시해 줘.
+```
 
 ## 근거와 공개 범위
 
