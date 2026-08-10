@@ -66,16 +66,21 @@ def sentence_run_findings(
     scan_text: str,
     protected: list[dict[str, object]],
 ) -> list[dict[str, object]]:
-    sentences: list[tuple[int, int, str]] = []
+    # A non-matching or protected sentence must remain a run boundary. Dropping it
+    # would join matching endings across intervening prose or a protected block.
+    sentences: list[tuple[int, int, str | None]] = []
     for match in re.finditer(r"[^.!?\n]+[.!?]", scan_text):
+        ending = None
         if not overlaps_protected(match.start(), match.end(), protected):
             ending = re.search(r"(습니다|이다|한다|된다|있다)\.$", match.group(0).strip())
-            if ending:
-                sentences.append((match.start(), match.end(), ending.group(1)))
+        sentences.append((match.start(), match.end(), ending.group(1) if ending else None))
     minimum = int(rule["minimum_run"])
     results: list[dict[str, object]] = []
     start = 0
     while start < len(sentences):
+        if sentences[start][2] is None:
+            start += 1
+            continue
         end = start + 1
         while end < len(sentences) and sentences[end][2] == sentences[start][2]:
             end += 1

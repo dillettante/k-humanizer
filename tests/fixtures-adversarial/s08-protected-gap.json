@@ -1,0 +1,5 @@
+{
+  "kind": "scan",
+  "before": "s08-protected-gap.txt",
+  "absent_rules": ["KH-S08"]
+}
