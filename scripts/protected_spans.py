@@ -8,6 +8,8 @@ from pathlib import Path
 
 
 PATTERNS: tuple[tuple[str, re.Pattern[str]], ...] = (
+    ("protected_block", re.compile(r"<!--\s*k-humanizer:protect-start\s*-->.*?<!--\s*k-humanizer:protect-end\s*-->", re.DOTALL | re.IGNORECASE)),
+    ("blockquote", re.compile(r"(?m)(?:^>[^\n]*(?:\n|$))+")),
     ("quotation", re.compile(r'"[^"\n]{1,500}"|“[^”\n]{1,500}”|「[^」\n]{1,500}」|『[^』\n]{1,500}』')),
     ("date", re.compile(r"\b\d{4}[.-]\d{1,2}[.-]\d{1,2}\b|\d{4}년\s*\d{1,2}월(?:\s*\d{1,2}일)?")),
     ("statute", re.compile(r"제\s*\d+\s*조(?:의\s*\d+)?(?:\s*제\s*\d+\s*항)?")),

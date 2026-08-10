@@ -1,0 +1,9 @@
+{
+  "kind": "coverage",
+  "before": "coverage.txt",
+  "mode": "residual",
+  "review_method": "mechanical",
+  "verdict": "preserve",
+  "expected_status": "통과",
+  "expected_forbidden_claims": ["전부 문맥 확인"]
+}

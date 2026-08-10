@@ -1,0 +1,6 @@
+{
+  "kind": "coverage",
+  "before": "../fixtures-public/coverage.txt",
+  "mode": "exhaustive",
+  "expected_status": "보류"
+}

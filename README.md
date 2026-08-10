@@ -16,7 +16,7 @@
 | 한국어 산문 윤문 | 문제의 위치와 까닭이 확인될 때만 고칩니다. |
 | 번역투 검토 | 원문이 있으면 자연스러움보다 뜻·주체·부정·양태·논리 관계를 먼저 대조합니다. |
 | 사람이 다듬은 원고 검토 | 억지로 문제를 만들지 않고, 의도한 반복·호흡·형식을 보존합니다. |
-| 장문 원고 | 편집 브리프와 보호 구간을 먼저 정하고, 구조 변경은 확인 요청으로 남깁니다. |
+| 장문 원고 | manifest와 review ledger로 실제 검사·판정 범위를 남기고, 구조 변경은 확인 요청으로 남깁니다. |
 | 안전·비교 검사 | 인용·수치·날짜·조문을 보호하고, 윤문 후보는 같은 기준으로 비교합니다. |
 | 문형·연구 조사 | KCI 조사 상태를 구분하고, 검증되지 않은 수치 규칙을 만들지 않습니다. |
 
@@ -61,6 +61,38 @@ AI 티가 나는 상투적 전개·기계적 병렬·번역투만 진단해 줘.
 
     python3 scripts/run_regression.py
 
+### 장문·다파일 검사 범위
+
+장문에서 앵커를 찾았다는 사실과 모든 문맥을 읽었다는 사실은 다릅니다. 여러 파일은 manifest에 포함·제외와 이유를 먼저 적고, 스캔 뒤에는 모든 앵커의 review ledger를 만듭니다.
+
+```json
+{
+  "documents": [
+    {"id": "chapter-1", "path": "chapter-1.md", "role": "prose"},
+    {"id": "bibliography", "path": "bibliography.md", "role": "bibliography", "include": false, "reason": "산문 검토 대상 아님"}
+  ]
+}
+```
+
+    python3 scripts/scan_style.py --manifest corpus.json --output scan.json
+    python3 scripts/build_review_ledger.py --scan scan.json --output review-ledger.jsonl
+    # review-ledger.jsonl에 실제 검토 방법·판정·이유를 기록한 뒤
+    python3 scripts/verify_coverage.py --scan scan.json --ledger review-ledger.jsonl --mode sample
+
+`sample`은 표본 경향만, `residual`은 전수 기계·규칙 분류만, `exhaustive`는 모든 앵커를 사람이 문맥 판정했을 때만 통과합니다. 따라서 결과가 “전수 문맥 검토”라고 말하려면 ledger의 모든 항목이 사람 판정이어야 합니다.
+
+이는 전문을 처음부터 끝까지 읽었다는 주장과 다릅니다. 전문 검토를 요청받으면 [전문 검토 범위 계약](references/full-corpus-review.md)에 따라 문서의 모든 연속 구간과 구간별 독해 메모를 남깁니다. 이를 끝낼 수 없으면 `부분 검토` 또는 `전수 앵커 검토`로 범위를 낮춰 보고합니다.
+
+Markdown 인용 블록은 기본적으로 스캔에서 제외합니다. 조문·표·인용 전문처럼 덩어리째 손대지 않을 구간은 다음 표지 사이에 둡니다.
+
+```html
+<!-- k-humanizer:protect-start -->
+보호할 전문
+<!-- k-humanizer:protect-end -->
+```
+
+같은 연결어가 논리 기능상 필요하지만 단조롭게 반복될 때에는 전면 치환하지 않습니다. 보존할 한 사례와 최대 2~6개의 `ask` 선택지만 제시해 저자가 결정하게 합니다.
+
 두 윤문 후보를 비교할 때에는 다음처럼 실행합니다. 이 결과는 gate 통과 여부만 기록하며, 자연스러움의 우열은 순서를 가린 사람 검토로 판단합니다.
 
     python3 scripts/compare_candidates.py --before draft.txt \
@@ -104,7 +136,7 @@ ChatGPT의 **Plugins → Skills → Create → Upload**에서 이 저장소를 �
 
 ## 근거와 공개 범위
 
-스킬의 공개 근거 상태와 KCI 조사 방법은 [`references/evidence-status.md`](references/evidence-status.md), [`references/kci-query-manifest.json`](references/kci-query-manifest.json)를 참고하세요. AI 문체 표지의 작동 기준·안전 범위·후보 비교 절차는 [`references/ai-style-taxonomy.md`](references/ai-style-taxonomy.md), [`references/evaluation-contract.md`](references/evaluation-contract.md), [`references/comparison-protocol.md`](references/comparison-protocol.md)에 있습니다. API 응답 원문, 자격 증명, 비공개 원고·문체 규칙·스캔본은 저장소에 포함하지 않습니다.
+스킬의 공개 근거 상태와 KCI 조사 방법은 [`references/evidence-status.md`](references/evidence-status.md), [`references/kci-query-manifest.json`](references/kci-query-manifest.json)를 참고하세요. AI 문체 표지의 작동 기준·안전 범위·후보 비교 절차는 [`references/ai-style-taxonomy.md`](references/ai-style-taxonomy.md), [`references/evaluation-contract.md`](references/evaluation-contract.md), [`references/comparison-protocol.md`](references/comparison-protocol.md), [`references/repetition-alternatives.md`](references/repetition-alternatives.md)에 있습니다. API 응답 원문, 자격 증명, 비공개 원고·문체 규칙·스캔본은 저장소에 포함하지 않습니다.
 
 ## 경계
 

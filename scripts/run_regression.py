@@ -8,9 +8,11 @@ import json
 import sys
 from pathlib import Path
 
-from scan_style import scan
+from scan_style import scan, scan_manifest
 from compare_candidates import compare
 from verify_style_gate import gate
+from build_review_ledger import build_rows
+from verify_coverage import evaluate
 
 
 DEFAULT_FIXTURE_DIRS = (
@@ -32,6 +34,19 @@ def run_fixture(fixture: Path) -> dict[str, object]:
         failures = [f"{rule_id}: expected >= {minimum}, got {result['counts'].get(rule_id, 0)}" for rule_id, minimum in expected.items() if int(result["counts"].get(rule_id, 0)) < minimum]
         unexpected = [rule_id for rule_id in config.get("absent_rules", []) if result["counts"].get(rule_id, 0)]
         failures.extend(f"{rule_id}: expected no finding" for rule_id in unexpected)
+    elif config["kind"] == "manifest":
+        result = scan_manifest(fixture.parent / str(config["manifest"]), translation_source=bool(config.get("translation_source")))
+        failures = []
+        if len(result["documents_scanned"]) != int(config["expected_scanned"]):
+            failures.append(f"expected {config['expected_scanned']} scanned documents")
+        if len(result["documents_excluded"]) != int(config["expected_excluded"]):
+            failures.append(f"expected {config['expected_excluded']} excluded documents")
+        for rule_id, minimum in config.get("minimum_counts", {}).items():
+            if int(result["counts"].get(rule_id, 0)) < int(minimum):
+                failures.append(f"{rule_id}: expected >= {minimum}, got {result['counts'].get(rule_id, 0)}")
+        for rule_id in config.get("absent_rules", []):
+            if result["counts"].get(rule_id, 0):
+                failures.append(f"{rule_id}: expected no finding")
     elif config["kind"] == "gate":
         result = gate(before, text_at(fixture, str(config["after"])), list(config.get("target_rules", [])), translation_source=bool(config.get("translation_source")), extra_values=None)
         failures = [] if result["status"] == config["expected_status"] else [f"expected {config['expected_status']}, got {result['status']}"]
@@ -41,6 +56,17 @@ def run_fixture(fixture: Path) -> dict[str, object]:
         expected = sorted(config["eligible_candidates"])
         actual = sorted(result["eligible_candidates"])
         failures = [] if actual == expected else [f"expected eligible {expected}, got {actual}"]
+    elif config["kind"] == "coverage":
+        scan_result = scan(before, translation_source=bool(config.get("translation_source")))
+        rows = build_rows(scan_result)
+        for row in rows:
+            row["review_method"] = str(config.get("review_method", "unreviewed"))
+            row["verdict"] = str(config.get("verdict", "unreviewed"))
+        result = evaluate(scan_result, rows, str(config["mode"]))
+        failures = [] if result["status"] == config["expected_status"] else [f"expected {config['expected_status']}, got {result['status']}"]
+        for phrase in config.get("expected_forbidden_claims", []):
+            if phrase not in result["forbidden_claims"]:
+                failures.append(f"missing forbidden claim: {phrase}")
     else:
         return {"fixture": fixture.name, "status": "failed", "failures": ["unknown fixture kind"]}
     return {"fixture": fixture.name, "status": "passed" if not failures else "failed", "failures": failures}

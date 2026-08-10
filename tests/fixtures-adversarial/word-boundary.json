@@ -1,0 +1,8 @@
+{
+  "kind": "scan",
+  "before": "word-boundary.txt",
+  "minimum_counts": {
+    "KH-S01": 1,
+    "KH-S04": 1
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "documents": [
+    {"id": "chapter-1", "path": "../fixtures-public/manifest-prose.txt", "role": "prose"},
+    {"id": "bibliography", "path": "../fixtures-public/manifest-bibliography.txt", "role": "bibliography", "include": false, "reason": "산문 검토 대상 아님"}
+  ]
+}

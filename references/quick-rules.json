@@ -2,10 +2,10 @@
   "schema_version": "0.1",
   "purpose": "Deterministic candidate anchors only; they are not authorship signals or automatic rewrite instructions.",
   "rules": [
-    {"id": "KH-S01", "anchor_type": "regex", "pattern": "(?:은|는|이|가)\\s+아니라", "requires": [], "count_mode": "deterministic", "disposition": "contextual"},
+    {"id": "KH-S01", "anchor_type": "regex", "pattern": "(?:은|는|이|가)\\s+아니라(?!고)", "requires": [], "count_mode": "deterministic", "disposition": "contextual"},
     {"id": "KH-S02", "anchor_type": "regex", "pattern": "결론적으로|요약하면|시사하는 바가 크다", "requires": [], "count_mode": "deterministic", "disposition": "contextual"},
     {"id": "KH-S03", "anchor_type": "regex", "pattern": "첫째|둘째|셋째|넷째", "requires": [], "count_mode": "deterministic", "disposition": "contextual"},
-    {"id": "KH-S04", "anchor_type": "regex", "pattern": "(?:한편|또한|다만|즉|다시 말해)(?:,|，)?", "requires": [], "count_mode": "deterministic", "disposition": "contextual"},
+    {"id": "KH-S04", "anchor_type": "regex", "pattern": "(?<![가-힣])(?:한편(?:으로)?|또한|다만|즉|다시\\s+말해)(?![가-힣])(?:\\s*(?:,|，))?", "requires": [], "count_mode": "deterministic", "disposition": "contextual"},
     {"id": "KH-S06", "anchor_type": "regex", "pattern": "(?:에\\s*의해|에\\s*의하여|에\\s*의한)", "requires": ["translation_source"], "count_mode": "deterministic", "disposition": "contextual"},
     {"id": "KH-S07", "anchor_type": "regex", "pattern": "(?:며|고|지만|는데|면서)\\s*,", "requires": [], "count_mode": "deterministic", "disposition": "contextual"},
     {"id": "KH-S08", "anchor_type": "sentence_run", "minimum_run": 3, "requires": [], "count_mode": "deterministic", "disposition": "contextual"},

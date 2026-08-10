@@ -1,0 +1,8 @@
+{
+  "kind": "coverage",
+  "before": "coverage.txt",
+  "mode": "exhaustive",
+  "review_method": "human",
+  "verdict": "preserve",
+  "expected_status": "통과"
+}

@@ -1,0 +1,5 @@
+{
+  "kind": "scan",
+  "before": "comment-mask.txt",
+  "absent_rules": ["KH-S02", "KH-S04", "KH-S09"]
+}

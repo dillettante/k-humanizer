@@ -1,0 +1,8 @@
+{
+  "kind": "manifest",
+  "before": "manifest-prose.txt",
+  "manifest": "../assets/corpus-manifest.json",
+  "expected_scanned": 1,
+  "expected_excluded": 1,
+  "minimum_counts": {"KH-S04": 1}
+}
