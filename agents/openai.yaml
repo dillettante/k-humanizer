@@ -1,4 +1,4 @@
 interface:
   display_name: "K-humanizer"
-  short_description: "근거 기반 한국어 산문·번역문 최소 윤문과 검증"
-  default_prompt: "K-humanizer를 사용해 한국어 산문을 진단하고, 뜻을 보존하며, 근거 있는 최소 수정만 제안해 줘."
+  short_description: "AI 문체 표지를 줄이는 한국어 최소 윤문"
+  default_prompt: "$k-humanizer를 사용해 AI 같은 한국어 문체 표지를 진단하고, 뜻을 보존하며, 근거 있는 최소 수정만 제안해 줘."

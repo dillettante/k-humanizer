@@ -1,13 +1,14 @@
 # K-humanizer
 
-근거에 따라 한국어 산문과 번역문을 진단하고, 뜻·인용·수치·용어·문체·의도한 리듬을 지키며 최소한으로 윤문하는 에이전트 스킬입니다.
+독자에게 기계적으로 느껴지는 한국어 문체 표지를 진단하고, 뜻·인용·수치·용어·문체·의도한 리듬을 지키며 최소한으로 윤문하는 에이전트 스킬입니다.
 
-AI가 썼는지 판별하거나 탐지를 피하도록 돕는 도구가 아닙니다. 이미 충분한 문장은 `수정 없음`으로 판단합니다.
+`AI 티를 줄여 달라`는 요청은 저자 판별이 아니라 독자가 읽으며 느끼는 문체의 기계적 표지를 줄이는 요청으로 처리합니다. AI가 썼는지 판별하거나 탐지를 피하도록 돕는 도구가 아니며, 이미 충분한 문장은 `수정 없음`으로 판단합니다.
 
 ## 무엇을 하나요
 
 | 작업 | K-humanizer의 기준 |
 | --- | --- |
+| AI 문체 표지 진단 | 번역투·기계적 병렬·결산 상투구·과잉 완곡 등을 위치와 문맥에 따라 최소 수정합니다. |
 | 한국어 산문 윤문 | 문제의 위치와 까닭이 확인될 때만 고칩니다. |
 | 번역투 검토 | 원문이 있으면 자연스러움보다 뜻·주체·부정·양태·논리 관계를 먼저 대조합니다. |
 | 사람이 다듬은 원고 검토 | 억지로 문제를 만들지 않고, 의도한 반복·호흡·형식을 보존합니다. |
@@ -23,6 +24,11 @@ AI가 썼는지 판별하거나 탐지를 피하도록 돕는 도구가 아닙�
 ```text
 이 문단을 보수적으로 윤문해 줘. 숫자와 직접 인용은 그대로 두고,
 각 수정에 짧게 이유를 붙여 줘.
+```
+
+```text
+AI 티가 나는 상투적 전개·기계적 병렬·번역투만 진단해 줘.
+의도한 반복과 직접 인용은 유지하고, 수정할 이유와 수정하지 않을 반례도 적어 줘.
 ```
 
 번역문은 원문을 함께 주고, 원문이 없을 때에는 `자연스러움만 검토`라고 밝혀 달라고 요청하세요.
@@ -68,7 +74,7 @@ ChatGPT의 **Plugins → Skills → Create → Upload**에서 이 저장소를 �
 
 ## 근거와 공개 범위
 
-스킬의 공개 근거 상태와 KCI 조사 방법은 [`references/evidence-status.md`](references/evidence-status.md), [`references/kci-query-manifest.json`](references/kci-query-manifest.json)를 참고하세요. API 응답 원문, 자격 증명, 비공개 원고·문체 규칙·스캔본은 저장소에 포함하지 않습니다.
+스킬의 공개 근거 상태와 KCI 조사 방법은 [`references/evidence-status.md`](references/evidence-status.md), [`references/kci-query-manifest.json`](references/kci-query-manifest.json)를 참고하세요. AI 문체 표지의 작동 기준과 평가 경계는 [`references/ai-style-taxonomy.md`](references/ai-style-taxonomy.md), [`references/evaluation-contract.md`](references/evaluation-contract.md)에 있습니다. API 응답 원문, 자격 증명, 비공개 원고·문체 규칙·스캔본은 저장소에 포함하지 않습니다.
 
 ## 경계
 
