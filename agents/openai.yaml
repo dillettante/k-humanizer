@@ -1,0 +1,4 @@
+interface:
+  display_name: "K-humanizer"
+  short_description: "근거 기반 한국어 산문·번역문 최소 윤문과 검증"
+  default_prompt: "Use $k-humanizer to diagnose Korean prose, preserve meaning, and suggest only evidence-backed minimal edits."

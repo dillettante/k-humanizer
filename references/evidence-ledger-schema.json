@@ -1,0 +1,27 @@
+{
+  "schema_version": "1.0",
+  "purpose": "Define the minimum evidence record before a research finding can influence a K-humanizer rule.",
+  "required_fields": [
+    "evidence_id",
+    "citation",
+    "source_url",
+    "verification_level",
+    "claim",
+    "method_or_material",
+    "scope",
+    "rule_candidate",
+    "caveat",
+    "status"
+  ],
+  "verification_levels": ["bibliography", "abstract", "full_text", "replicated"],
+  "statuses": ["hold", "provisional", "confirmed", "retired"],
+  "promotion_requirements": {
+    "provisional": ["A directly relevant source", "A located example or deterministic anchor", "A stated negative example or scope boundary"],
+    "confirmed": ["Independent Korean evaluation", "Meaning-preservation review", "Profile-specific precision check"]
+  },
+  "prohibitions": [
+    "Do not turn a detector feature into an editing instruction.",
+    "Do not infer a universal rate or threshold from a single study.",
+    "Do not use a translation-context finding as evidence about native Korean prose without a direct comparison."
+  ]
+}

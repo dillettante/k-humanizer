@@ -1,0 +1,86 @@
+{
+  "schema_version": "1.0",
+  "source": {
+    "name": "KCI Open API",
+    "documentation": "https://www.kci.go.kr/kciportal/po/openapi/openApiList.kci",
+    "search_console": "https://www.kci.go.kr/kciportal/po/openapi/openApiConnSearch.kci",
+    "endpoint": "https://open.kci.go.kr/po/openapi/openApiSearch.kci",
+    "api_code": "articleSearch",
+    "response_format": "XML",
+    "credential_env": "KCI_API_KEY",
+    "credential_policy": "Read only from the named environment variable. Never accept, print, persist, or commit a key."
+  },
+  "collection": {
+    "record_scope": "metadata-and-abstract-only",
+    "raw_destination": "local-private/raw/kci/YYYY-MM-DD/",
+    "derived_destination": "local-private/derived/kci/",
+    "public_policy": "Publish only normalized bibliographic metadata, identifiers, derived statistics, and source-backed summaries. Do not publish raw responses or full text."
+  },
+  "request": {
+    "fields": ["title", "keyword", "abstract"],
+    "display_count_max": 100,
+    "page_parameter": "page",
+    "pagination_note": "Stop and report if the API repeats a page fingerprint; do not infer a different undocumented pagination mechanism.",
+    "date_from": "200001",
+    "date_to": null,
+    "sort": "relevance",
+    "retry": {
+      "max_attempts": 3,
+      "backoff_seconds": [1, 3, 9]
+    }
+  },
+  "query_groups": [
+    {
+      "id": "ai-generated-korean",
+      "purpose": "Find studies on Korean LLM or generative-AI writing and detection.",
+      "terms": ["인공지능", "생성형 AI", "대규모 언어 모델", "LLM", "AI 생성 텍스트", "기계 생성문", "AI 글쓰기"]
+    },
+    {
+      "id": "translationese-and-mtpe",
+      "purpose": "Find translationese, machine translation, and post-editing studies.",
+      "terms": ["번역투", "번역어", "기계번역", "신경망 기계번역", "LLM 번역", "포스트에디팅", "translationese"]
+    },
+    {
+      "id": "korean-english-pair",
+      "purpose": "Narrow results to Korean-English translation and post-editing.",
+      "terms": ["영한", "한영", "한국어 번역", "영어 한국어", "Korean-English"]
+    },
+    {
+      "id": "korean-style-phenomena",
+      "purpose": "Find Korean stylistic phenomena with diagnostic or editing relevance.",
+      "terms": ["한국어 문체", "자연성", "유창성", "가독성", "종결어미", "대명사", "피동", "무생물 주어", "복수 표지", "명사화", "조사 결합"]
+    },
+    {
+      "id": "translation-quality-evaluation",
+      "purpose": "Find work that separates semantic equivalence, grammatical accuracy, naturalness, and fluency.",
+      "terms": ["번역 품질", "번역 정확성", "번역 자연성", "번역 유창성", "오역", "누락"]
+    }
+  ],
+  "screening": {
+    "include_if": [
+      "The study defines, measures, or evaluates a Korean stylistic, translation, or post-editing phenomenon.",
+      "The abstract supplies enough metadata to determine language, direction, genre, method, and claimed scope."
+    ],
+    "exclude_if": [
+      "The record discusses AI or translation only as a general topic without a Korean-text finding.",
+      "The claim cannot be tied to a paper, data, method, or stated limitation."
+    ]
+  },
+  "deduplication": ["KCI article ID", "DOI", "UCI", "normalized title + year + first author"],
+  "evidence_fields": [
+    "source_id",
+    "citation",
+    "persistent_identifier",
+    "language_pair",
+    "genre",
+    "sample_and_comparison",
+    "features",
+    "metrics",
+    "korean_directness",
+    "claim_scope",
+    "reproducibility",
+    "rule_ids",
+    "caveat",
+    "verification_status"
+  ]
+}

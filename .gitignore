@@ -1,0 +1,8 @@
+# 비공개 조사 자료와 수집 결과는 절대 공개 저장소에 넣지 않는다.
+evidence/private/
+
+# 실행 환경에서 생기는 파일
+.DS_Store
+__pycache__/
+*.py[cod]
+tmp/
