@@ -6,7 +6,7 @@
 
 `AI 티를 없애 달라`, `사람이 쓴 것처럼 다듬어 달라`는 요청은 기본적으로 **표준 인간화**로 처리합니다. 진단만 하거나 표지 몇 개만 바꾸지 않고, `빼기 → 다시 짜기 → 목소리 복원`의 세 단계로 완성본을 만듭니다. 이 스킬은 AI 작성 여부를 판별하거나 탐지를 피하도록 돕지 않습니다.
 
-> 상태: v0.5 prototype. 33개 문체 패턴, 21개 결정적 앵커, 무수정·신규 표지 gate, Markdown·DOCX 형식 프로필, 반복 윤문 수렴 계약, 용어 이관 후유증 감사와 전방 비교 검증을 갖췄습니다. 독립적인 맹검 사람 평가는 계속 진행 중입니다.
+> 상태: v0.6 prototype. 39개 문체·구조 후보, 25개 결정적 앵커, 무수정·신규 표지 gate, Markdown·DOCX 형식 프로필, 반복 윤문 수렴 계약, 다파일 구조 분포·다의어 선별 이관 감사와 전방 비교 검증을 갖췄습니다. 독립적인 맹검 사람 평가는 계속 진행 중입니다.
 
 ## 무엇을 하나요
 
@@ -16,6 +16,7 @@
 | 한국어 산문 윤문 | 진단·최소 윤문·표준 인간화·목소리 복원 중 작업 강도를 고릅니다. |
 | 번역투 검토 | 원문이 있으면 자연스러움보다 뜻·주체·부정·양태·논리 관계를 먼저 대조합니다. |
 | 사람이 다듬은 원고 검토 | 억지로 문제를 만들지 않고, 의도한 반복·호흡·형식을 보존합니다. |
+| AI 초안 후 편집본 | 장·파일을 가로지르는 메타 발화·회귀 신호·표제문 과밀을 위치·분포와 함께 따로 보고합니다. 단일 횟수만으로 결함이라 판정하지 않습니다. |
 | 파일 형식 보존 | Markdown의 `#`·`**`는 구조로 보존하고, DOCX의 장식성 이모지·굵은 본문·가짜 제목만 따로 진단합니다. |
 | 장문 원고 | manifest와 review ledger로 실제 검사·판정 범위를 남기고, 구조 변경은 확인 요청으로 남깁니다. |
 | 안전·비교 검사 | 인용·수치·날짜·조문을 보호하고, 윤문 후보는 같은 기준으로 비교합니다. |
@@ -83,12 +84,23 @@ Markdown의 제목·굵은 표지·이모지·코드 펜스는 사용자가 서�
 
     python3 scripts/run_regression.py
 
+AI 초안을 사람이 다시 편집한 장문은 작성 내력을 밝혀 구조 후보를 별도 스캔합니다. 결과의 `rule_distribution`과 `cross_document_repeats`는 수정 명령이 아니라, 반복의 기능을 읽을 우선순위를 보여 줍니다.
+
+    python3 scripts/scan_style.py --manifest corpus.json --provenance ai_edited --output scan.json
+
 확정 번역어·표준어를 책 전체에 이관했다면 기존어 잔존과 치환 후 동어반복 후보를 별도로 확인합니다.
 
     python3 scripts/audit_term_migration.py \
       --manifest migration-manifest.json --term-map term-map.json
 
 term map에는 원어·기존어·확정어·적용 범위·예외를, manifest에는 전후 파일과 실제 검사 scope를 기록합니다. 이 검사는 연어·개념 범위·제목 기능을 자동 판정하지 않으므로, 보고된 모든 확정어 문맥은 사람이 다시 읽어야 합니다. 자세한 계약은 [용어 이관·후유증 검토 계약](references/terminology-migration.md)에 있습니다.
+
+한 기존어가 서로 다른 개념을 가리키는 경우에는 전역 치환을 멈추고, 용례별 `replace·preserve·ask` 결정을 대장에 기록합니다. 변경 전·후 좌표를 함께 감사합니다.
+
+    python3 scripts/audit_selective_terms.py \
+      --manifest migration-manifest.json --sense-map sense-map.json
+
+자세한 형식은 [다의어·선별 이관 계약](references/selective-terminology.md)을 따릅니다.
 
 ### 장문·다파일 검사 범위
 

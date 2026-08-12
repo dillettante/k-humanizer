@@ -1,0 +1,6 @@
+{
+  "kind": "scan",
+  "before": "post-edited-structure.txt",
+  "provenance": "ai_edited",
+  "minimum_counts": {"KH-S34": 2, "KH-S35": 1, "KH-S36": 1, "KH-S37": 1}
+}

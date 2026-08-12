@@ -25,11 +25,21 @@ def audit(
     saw_no_change = False
     changed_after_no_change = False
     seen_hashes = {hashlib.sha256(baseline.encode("utf-8")).hexdigest(): baseline_id}
+    measurement_cache: dict[tuple[str, str], dict[str, object]] = {}
     oscillations: list[dict[str, str]] = []
 
+    def measured(before: str, after: str) -> dict[str, object]:
+        key = (
+            hashlib.sha256(before.encode("utf-8")).hexdigest(),
+            hashlib.sha256(after.encode("utf-8")).hexdigest(),
+        )
+        if key not in measurement_cache:
+            measurement_cache[key] = measure(before, after)
+        return measurement_cache[key]
+
     for label, text in versions:
-        from_previous = measure(previous, text)
-        from_baseline = measure(baseline, text)
+        from_previous = measured(previous, text)
+        from_baseline = measured(baseline, text)
         same_as_previous = text == previous
         if saw_no_change and not same_as_previous:
             changed_after_no_change = True
@@ -43,8 +53,12 @@ def audit(
             {
                 "label": label,
                 "same_as_previous": same_as_previous,
+                "comparison_method_from_previous": from_previous["comparison_method"],
                 "changed_character_ratio_from_previous": from_previous["changed_character_ratio"],
+                "changed_line_ratio_from_previous": from_previous["changed_line_ratio"],
+                "comparison_method_from_baseline": from_baseline["comparison_method"],
                 "changed_character_ratio_from_baseline": from_baseline["changed_character_ratio"],
+                "changed_line_ratio_from_baseline": from_baseline["changed_line_ratio"],
                 "changed_sentence_slots_from_previous": from_previous["changed_sentence_slots"],
                 "markdown_structure": structure["status"],
                 "markdown_changed": structure["changed"],
@@ -71,11 +85,12 @@ def audit(
         },
         "versions": rows,
         "oscillations": oscillations,
+        "measurement_cache_entries": len(measurement_cache),
         "warnings": warnings,
         "latest_same_as_previous": bool(rows[-1]["same_as_previous"]),
         "requires_human_convergence_decision": True,
         "recommendation": "baseline 의미 명세와 회차 대장을 사람이 확인한 뒤 수렴·수정·롤백을 결정",
-        "limit": "변경량·무수정·문서 전체의 exact 왕복·Markdown 표지만 확인한다. 문장 일부의 왕복, 수렴, 의미 보존, 자연스러움, AI 작성 여부는 판정하지 않는다.",
+        "limit": "변경량·무수정·문서 전체의 exact 왕복·Markdown 표지만 확인한다. 장문에서는 changed_character_ratio가 null이고 line ratio만 제공될 수 있다. 문장 일부의 왕복, 수렴, 의미 보존, 자연스러움, AI 작성 여부는 판정하지 않는다.",
     }
 
 

@@ -8,7 +8,7 @@ import json
 from pathlib import Path
 
 from protected_spans import custom_values
-from scan_style import scan
+from scan_style import PROVENANCES, scan
 from verify_protected_spans import verify
 
 
@@ -18,12 +18,13 @@ def gate(
     target_rules: list[str],
     *,
     translation_source: bool,
-    extra_values: list[str] | None,
+    provenance: str = "unknown",
+    extra_values: list[str] | None = None,
     preserved_rules: list[str] | None = None,
 ) -> dict[str, object]:
     protected = verify(before, after, extra_values)
-    before_scan = scan(before, translation_source=translation_source, extra_values=extra_values)
-    after_scan = scan(after, translation_source=translation_source, extra_values=extra_values)
+    before_scan = scan(before, translation_source=translation_source, provenance=provenance, extra_values=extra_values)
+    after_scan = scan(after, translation_source=translation_source, provenance=provenance, extra_values=extra_values)
     all_rules = sorted(set(before_scan["counts"]) | set(after_scan["counts"]))
     delta = {rule_id: int(after_scan["counts"].get(rule_id, 0)) - int(before_scan["counts"].get(rule_id, 0)) for rule_id in all_rules}
     preserved = set(preserved_rules or [])
@@ -44,10 +45,11 @@ def gate(
     introduced = [rule_id for rule_id, value in delta.items() if value > 0 and rule_id not in target_rules]
     status = "통과" if not protected["missing"] and not unresolved and not introduced and not invalid_preserved else "보류"
     return {
-        "schema_version": "0.2",
+        "schema_version": "0.3",
         "kind": "style-gate",
         "status": status,
         "target_rules": target_rules,
+        "provenance": provenance,
         "protected": protected,
         "before_counts": before_scan["counts"],
         "after_counts": after_scan["counts"],
@@ -70,6 +72,7 @@ def main() -> int:
     parser.add_argument("--target-rule", action="append", default=[], help="완화가 목표인 KH-S ID; 여러 번 지정 가능")
     parser.add_argument("--preserve-rule", action="append", default=[], help="사람이 문맥을 확인해 보존하기로 한 목표 KH-S ID")
     parser.add_argument("--translation-source", action="store_true")
+    parser.add_argument("--provenance", choices=PROVENANCES, default="unknown")
     parser.add_argument("--protect-file", type=Path)
     parser.add_argument("--output", type=Path)
     args = parser.parse_args()
@@ -78,6 +81,7 @@ def main() -> int:
         args.after.read_text(encoding="utf-8"),
         args.target_rule,
         translation_source=args.translation_source,
+        provenance=args.provenance,
         extra_values=custom_values(args.protect_file),
         preserved_rules=args.preserve_rule,
     )

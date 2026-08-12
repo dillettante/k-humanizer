@@ -30,13 +30,21 @@ def run_fixture(fixture: Path) -> dict[str, object]:
     config = json.loads(fixture.read_text(encoding="utf-8"))
     before = text_at(fixture, str(config["before"]))
     if config["kind"] == "scan":
-        result = scan(before, translation_source=bool(config.get("translation_source")))
+        result = scan(
+            before,
+            translation_source=bool(config.get("translation_source")),
+            provenance=str(config.get("provenance", "unknown")),
+        )
         expected = {str(key): int(value) for key, value in config.get("minimum_counts", {}).items()}
         failures = [f"{rule_id}: expected >= {minimum}, got {result['counts'].get(rule_id, 0)}" for rule_id, minimum in expected.items() if int(result["counts"].get(rule_id, 0)) < minimum]
         unexpected = [rule_id for rule_id in config.get("absent_rules", []) if result["counts"].get(rule_id, 0)]
         failures.extend(f"{rule_id}: expected no finding" for rule_id in unexpected)
     elif config["kind"] == "manifest":
-        result = scan_manifest(fixture.parent / str(config["manifest"]), translation_source=bool(config.get("translation_source")))
+        result = scan_manifest(
+            fixture.parent / str(config["manifest"]),
+            translation_source=bool(config.get("translation_source")),
+            provenance=str(config.get("provenance", "unknown")),
+        )
         failures = []
         if len(result["documents_scanned"]) != int(config["expected_scanned"]):
             failures.append(f"expected {config['expected_scanned']} scanned documents")
@@ -54,18 +62,30 @@ def run_fixture(fixture: Path) -> dict[str, object]:
             text_at(fixture, str(config["after"])),
             list(config.get("target_rules", [])),
             translation_source=bool(config.get("translation_source")),
+            provenance=str(config.get("provenance", "unknown")),
             extra_values=None,
             preserved_rules=list(config.get("preserved_rules", [])),
         )
         failures = [] if result["status"] == config["expected_status"] else [f"expected {config['expected_status']}, got {result['status']}"]
     elif config["kind"] == "comparison":
         candidates = {str(name): text_at(fixture, str(path)) for name, path in config["candidates"].items()}
-        result = compare(before, candidates, list(config.get("target_rules", [])), translation_source=bool(config.get("translation_source")), extra_values=None)
+        result = compare(
+            before,
+            candidates,
+            list(config.get("target_rules", [])),
+            translation_source=bool(config.get("translation_source")),
+            provenance=str(config.get("provenance", "unknown")),
+            extra_values=None,
+        )
         expected = sorted(config["eligible_candidates"])
         actual = sorted(result["eligible_candidates"])
         failures = [] if actual == expected else [f"expected eligible {expected}, got {actual}"]
     elif config["kind"] == "coverage":
-        scan_result = scan(before, translation_source=bool(config.get("translation_source")))
+        scan_result = scan(
+            before,
+            translation_source=bool(config.get("translation_source")),
+            provenance=str(config.get("provenance", "unknown")),
+        )
         rows = build_rows(scan_result)
         for row in rows:
             row["review_method"] = str(config.get("review_method", "unreviewed"))

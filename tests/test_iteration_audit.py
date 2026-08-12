@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import sys
+import time
 from pathlib import Path
 
 
@@ -63,3 +64,18 @@ def test_exact_return_to_earlier_version_flags_oscillation() -> None:
         {"current": "pass-2", "returned_to": "baseline"},
         {"current": "pass-3", "returned_to": "pass-1"},
     ]
+
+
+def test_book_length_input_uses_line_measurement_without_character_diff() -> None:
+    baseline = "문장이 이어진다.\n" * 24_000
+    revised = baseline.replace("문장이 이어진다.\n", "문장이 달라진다.\n", 1)
+
+    started = time.monotonic()
+    result = audit(baseline, [("pass-1", revised), ("pass-2", revised)])
+    elapsed = time.monotonic() - started
+
+    assert elapsed < 3
+    assert result["versions"][0]["comparison_method_from_previous"] == "line-sequence"
+    assert result["versions"][0]["changed_character_ratio_from_previous"] is None
+    assert result["versions"][1]["comparison_method_from_previous"] == "exact-equality"
+    assert result["measurement_cache_entries"] == 2

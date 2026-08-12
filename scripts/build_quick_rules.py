@@ -28,8 +28,14 @@ def build(path: Path) -> dict[str, object]:
             re.compile(str(rule.get("pattern", "")))
         elif anchor_type == "sentence_run" and int(rule.get("minimum_run", 0)) < 2:
             raise ValueError(f"{rule['id']} requires minimum_run >= 2")
+        elif anchor_type == "structural":
+            kind = rule.get("structural_kind")
+            if kind not in {"meta_discourse", "return_signal", "advance_label", "emphasis_run"}:
+                raise ValueError(f"{rule['id']} requires a supported structural_kind")
+            if kind == "emphasis_run" and int(rule.get("minimum_run", 0)) < 2:
+                raise ValueError(f"{rule['id']} requires minimum_run >= 2")
         else:
-            if anchor_type not in {"regex", "sentence_run"}:
+            if anchor_type not in {"regex", "sentence_run", "structural"}:
                 raise ValueError(f"unsupported anchor type: {anchor_type}")
     return {"schema_version": payload.get("schema_version"), "rule_count": len(rules), "rule_ids": ids, "status": "valid"}
 

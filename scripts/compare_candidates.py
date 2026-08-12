@@ -9,6 +9,7 @@ from pathlib import Path
 
 from measure_edit import measure
 from protected_spans import custom_values
+from scan_style import PROVENANCES
 from verify_style_gate import gate
 
 
@@ -18,11 +19,12 @@ def compare(
     target_rules: list[str],
     *,
     translation_source: bool,
-    extra_values: list[str] | None,
+    provenance: str = "unknown",
+    extra_values: list[str] | None = None,
 ) -> dict[str, object]:
     results: list[dict[str, object]] = []
     for name, after in candidates.items():
-        style_gate = gate(before, after, target_rules, translation_source=translation_source, extra_values=extra_values)
+        style_gate = gate(before, after, target_rules, translation_source=translation_source, provenance=provenance, extra_values=extra_values)
         results.append(
             {
                 "candidate": name,
@@ -33,9 +35,10 @@ def compare(
         )
     eligible = [item["candidate"] for item in results if item["eligibility"] == "비교 가능"]
     return {
-        "schema_version": "0.1",
+        "schema_version": "0.2",
         "kind": "candidate-comparison",
         "target_rules": target_rules,
+        "provenance": provenance,
         "candidates": results,
         "eligible_candidates": eligible,
         "next_step": "순서를 가린 사람 검토" if eligible else "보호·표지 gate 실패를 먼저 해결",
@@ -58,6 +61,7 @@ def main() -> int:
     parser.add_argument("--candidate", action="append", required=True, help="NAME=PATH; repeat for each candidate")
     parser.add_argument("--target-rule", action="append", default=[])
     parser.add_argument("--translation-source", action="store_true")
+    parser.add_argument("--provenance", choices=PROVENANCES, default="unknown")
     parser.add_argument("--protect-file", type=Path)
     parser.add_argument("--output", type=Path)
     args = parser.parse_args()
@@ -74,6 +78,7 @@ def main() -> int:
         candidates,
         args.target_rule,
         translation_source=args.translation_source,
+        provenance=args.provenance,
         extra_values=custom_values(args.protect_file),
     )
     rendered = json.dumps(result, ensure_ascii=False, indent=2) + "\n"
