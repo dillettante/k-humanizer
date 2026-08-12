@@ -1,0 +1,7 @@
+{
+  "kind": "gate",
+  "before": "introduced-style-before.txt",
+  "after": "introduced-style-after.txt",
+  "target_rules": ["KH-S02"],
+  "expected_status": "보류"
+}

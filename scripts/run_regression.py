@@ -48,7 +48,14 @@ def run_fixture(fixture: Path) -> dict[str, object]:
             if result["counts"].get(rule_id, 0):
                 failures.append(f"{rule_id}: expected no finding")
     elif config["kind"] == "gate":
-        result = gate(before, text_at(fixture, str(config["after"])), list(config.get("target_rules", [])), translation_source=bool(config.get("translation_source")), extra_values=None)
+        result = gate(
+            before,
+            text_at(fixture, str(config["after"])),
+            list(config.get("target_rules", [])),
+            translation_source=bool(config.get("translation_source")),
+            extra_values=None,
+            preserved_rules=list(config.get("preserved_rules", [])),
+        )
         failures = [] if result["status"] == config["expected_status"] else [f"expected {config['expected_status']}, got {result['status']}"]
     elif config["kind"] == "comparison":
         candidates = {str(name): text_at(fixture, str(path)) for name, path in config["candidates"].items()}

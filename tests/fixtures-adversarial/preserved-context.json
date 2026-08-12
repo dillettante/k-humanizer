@@ -1,0 +1,8 @@
+{
+  "kind": "gate",
+  "before": "noop-edit.txt",
+  "after": "noop-edit.txt",
+  "target_rules": ["KH-S02"],
+  "preserved_rules": ["KH-S02"],
+  "expected_status": "통과"
+}

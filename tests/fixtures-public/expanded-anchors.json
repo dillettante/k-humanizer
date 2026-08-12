@@ -1,0 +1,18 @@
+{
+  "kind": "scan",
+  "before": "expanded-anchors.txt",
+  "minimum_counts": {
+    "KH-S09": 1,
+    "KH-S11": 1,
+    "KH-S12": 1,
+    "KH-S13": 1,
+    "KH-S15": 1,
+    "KH-S17": 2,
+    "KH-S18": 1,
+    "KH-S19": 1,
+    "KH-S20": 1,
+    "KH-S21": 1,
+    "KH-S26": 1,
+    "KH-S27": 1
+  }
+}
