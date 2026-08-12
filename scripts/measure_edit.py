@@ -19,7 +19,12 @@ def measure(before: str, after: str) -> dict[str, object]:
     unchanged = sum(i2 - i1 for tag, i1, i2, _, _ in matcher.get_opcodes() if tag == "equal")
     denominator = max(len(before), len(after), 1)
     before_sentences, after_sentences = sentences(before), sentences(after)
-    changed_sentence_slots = sum(1 for index, sentence in enumerate(before_sentences) if index >= len(after_sentences) or sentence != after_sentences[index])
+    sentence_matcher = difflib.SequenceMatcher(a=before_sentences, b=after_sentences, autojunk=False)
+    changed_sentence_slots = sum(
+        max(i2 - i1, j2 - j1)
+        for tag, i1, i2, j1, j2 in sentence_matcher.get_opcodes()
+        if tag != "equal"
+    )
     return {
         "schema_version": "0.1",
         "kind": "edit-measurement",

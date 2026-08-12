@@ -1,5 +1,5 @@
 {
-  "schema_version": "0.3",
+  "schema_version": "0.4",
   "purpose": "Deterministic candidate anchors only; they are not authorship signals or automatic rewrite instructions.",
   "rules": [
     {"id": "KH-S01", "anchor_type": "regex", "pattern": "(?:은|는|이|가)\\s+아니라(?!고)", "requires": [], "count_mode": "deterministic", "disposition": "contextual"},
@@ -21,6 +21,7 @@
     {"id": "KH-S20", "anchor_type": "regex", "pattern": "(?:을|를|기)\\s*위해(?:서)?", "requires": [], "count_mode": "deterministic", "disposition": "contextual"},
     {"id": "KH-S21", "anchor_type": "regex", "pattern": "(?:중요하고\\s+핵심적|핵심적이고\\s+중요|역할과\\s+기능|기능과\\s+역할|적\\s+(?:측면|관점))", "requires": [], "count_mode": "deterministic", "disposition": "contextual"},
     {"id": "KH-S26", "anchor_type": "regex", "pattern": "(?:(?:다는|라는)\\s*것이다|(?:할|해야\\s*할)\\s*필요가\\s*있다)", "requires": [], "count_mode": "deterministic", "disposition": "contextual"},
-    {"id": "KH-S27", "anchor_type": "regex", "pattern": "(?m)(?:이\\s*(?:글|장|절)에서는?)[^.!?\\n]{0,80}(?:살펴본다|다룬다|알아본다)", "requires": [], "count_mode": "deterministic", "disposition": "contextual"}
+    {"id": "KH-S27", "anchor_type": "regex", "pattern": "(?m)(?:이\\s*(?:글|장|절)에서는?)[^.!?\\n]{0,80}(?:살펴본다|다룬다|알아본다)", "requires": [], "count_mode": "deterministic", "disposition": "contextual"},
+    {"id": "KH-S32", "anchor_type": "regex", "pattern": "(?:긴밀(?:히|하게)\\s+(?:연결|맞물)|능동적(?:으로|인)\\s+(?:상호작용|참여)|체계적(?:으로|인)\\s+(?:정리|분석|접근|관리|기록|적어)|(?:삶|문화|경험|논의)(?:을|를)\\s+풍요롭게|(?:성장|발전)(?:을|의)\\s+위한\\s+(?:핵심|중요한)\\s+(?:습관|수단|과정)|(?:핵심|중요한)\\s+(?:습관|수단|과정)(?:으로)?\\s+(?:인식|받아들))", "requires": [], "count_mode": "deterministic", "disposition": "contextual"}
   ]
 }

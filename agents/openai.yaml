@@ -1,4 +1,4 @@
 interface:
   display_name: "K-humanizer"
-  short_description: "AI식 한국어를 해체하고 저자 목소리를 살리는 윤문"
+  short_description: "AI식·번역투를 해체하고 용어·저자 목소리를 지키는 윤문"
   default_prompt: "$k-humanizer로 이 글의 AI식 문투를 해체하되 뜻과 저자 목소리를 보존한 표준 인간화 완성본을 먼저 보여 줘."

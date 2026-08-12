@@ -1,0 +1,7 @@
+{
+  "kind": "scan",
+  "before": "formula-cluster.txt",
+  "minimum_counts": {
+    "KH-S32": 5
+  }
+}

@@ -13,6 +13,7 @@ from compare_candidates import compare
 from verify_style_gate import gate
 from build_review_ledger import build_rows
 from verify_coverage import evaluate
+from audit_term_migration import audit as audit_term_migration
 
 
 DEFAULT_FIXTURE_DIRS = (
@@ -74,6 +75,17 @@ def run_fixture(fixture: Path) -> dict[str, object]:
         for phrase in config.get("expected_forbidden_claims", []):
             if phrase not in result["forbidden_claims"]:
                 failures.append(f"missing forbidden claim: {phrase}")
+    elif config["kind"] == "term_migration":
+        after = text_at(fixture, str(config["after"]))
+        term_map = json.loads(text_at(fixture, str(config["term_map"])))
+        result = audit_term_migration(before, after, term_map)
+        failures = []
+        if result["status"] != config["expected_status"]:
+            failures.append(f"expected {config['expected_status']}, got {result['status']}")
+        if int(result["residue_count"]) != int(config.get("expected_residue_count", 0)):
+            failures.append(f"expected residue count {config.get('expected_residue_count', 0)}, got {result['residue_count']}")
+        if int(result["echo_candidate_count"]) < int(config.get("minimum_echo_candidates", 0)):
+            failures.append(f"expected at least {config.get('minimum_echo_candidates', 0)} echo candidates, got {result['echo_candidate_count']}")
     else:
         return {"fixture": fixture.name, "status": "failed", "failures": ["unknown fixture kind"]}
     return {"fixture": fixture.name, "status": "passed" if not failures else "failed", "failures": failures}

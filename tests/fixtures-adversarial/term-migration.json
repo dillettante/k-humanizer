@@ -1,0 +1,9 @@
+{
+  "kind": "term_migration",
+  "before": "term-migration-before.txt",
+  "after": "term-migration-after.txt",
+  "term_map": "term-map.jsonmap",
+  "expected_status": "기계 확인 완료",
+  "expected_residue_count": 0,
+  "minimum_echo_candidates": 2
+}

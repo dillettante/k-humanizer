@@ -1,0 +1,14 @@
+{
+  "schema_version": "0.1",
+  "terms": [
+    {
+      "id": "review-order",
+      "source": "review hierarchy",
+      "old": ["검토 위계"],
+      "new": "검토 순서",
+      "scope": ["body"],
+      "exceptions": [],
+      "rationale": "서열보다 적용 차례를 뜻함"
+    }
+  ]
+}

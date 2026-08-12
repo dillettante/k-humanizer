@@ -1,0 +1,9 @@
+{
+  "kind": "gate",
+  "before": "formula-cluster.txt",
+  "after": "formula-cluster.txt",
+  "target_rules": [
+    "KH-S32"
+  ],
+  "expected_status": "보류"
+}
