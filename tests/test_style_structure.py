@@ -84,3 +84,34 @@ def test_bold_navigation_labels_do_not_count_as_emphasis_run() -> None:
     result = scan("**제1장 출발**\n\n**제2장 전개**\n\n**부록 자료**\n", provenance="ai_edited")
 
     assert "KH-S37" not in result["counts"]
+
+
+def test_triadic_chain_is_collected_without_semantic_verdict() -> None:
+    redundant = scan("그의 마음은 무너졌고 흩어졌으며 소멸했다.")
+    procedural = scan("자료를 모으고 분류하며 검증했다.")
+
+    assert redundant["counts"]["KH-S40"] == 1
+    assert procedural["counts"]["KH-S40"] == 1
+    assert "의미 기여도 확인" in redundant["findings"][0]["evidence"]
+    assert redundant["findings"][0]["shape"] == "삼항 병렬: -고/-며"
+
+
+def test_triadic_chain_in_quote_or_protected_block_is_not_collected() -> None:
+    text = """> 그의 마음은 무너졌고 흩어졌으며 소멸했다.
+
+<!-- k-humanizer:protect-start -->
+중요하고 핵심적이며 필수적이다.
+<!-- k-humanizer:protect-end -->
+"""
+
+    result = scan(text)
+
+    assert "KH-S40" not in result["counts"]
+
+
+def test_triadic_chain_does_not_split_words_or_quotative_endings() -> None:
+    text = "알고리즘은 내가 좋아할 것을 주고, 도구는 원하는 답을 준다. 그는 사실이라고 믿는다고 썼다."
+
+    result = scan(text)
+
+    assert "KH-S40" not in result["counts"]

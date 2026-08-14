@@ -198,6 +198,39 @@ def sentence_run_findings(
     return results
 
 
+def triadic_chain_findings(
+    rule: dict[str, object],
+    source_text: str,
+    scan_text: str,
+    protected: list[dict[str, object]],
+    structure: list[dict[str, object]],
+) -> list[dict[str, object]]:
+    """Collect three-part predicate chains; semantic redundancy remains a human decision."""
+
+    connector = r"(?:(?<![다라냐자])고|(?<![다라냐자])며)(?:\s*,\s*|\s+)"
+    pattern = re.compile(
+        rf"[^.!?\n,]{{1,36}}?{connector}"
+        rf"[^.!?\n,]{{1,28}}?{connector}"
+        r"[^.!?\n]{1,40}(?=[.!?])"
+    )
+    results: list[dict[str, object]] = []
+    for match in pattern.finditer(scan_text):
+        if overlaps_protected(match.start(), match.end(), protected):
+            continue
+        results.append(
+            finding(
+                str(rule["id"]),
+                source_text,
+                match.start(),
+                match.end(),
+                f"삼항 병렬 후보—세 항목의 의미 기여도 확인: {match.group(0).strip()}",
+                structure=structure,
+                shape="삼항 병렬: -고/-며",
+            )
+        )
+    return results
+
+
 def structural_findings(
     rule: dict[str, object],
     source_text: str,
@@ -354,6 +387,8 @@ def scan(
                     findings.append(finding(rule_id, text, match.start(), match.end(), match.group(0), structure=structure))
         elif rule["anchor_type"] == "sentence_run":
             findings.extend(sentence_run_findings(rule, text, scan_text, protected, structure))
+        elif rule["anchor_type"] == "triadic_chain":
+            findings.extend(triadic_chain_findings(rule, text, scan_text, protected, structure))
         elif rule["anchor_type"] == "structural":
             findings.extend(structural_findings(rule, text, scan_text, protected, structure))
     findings.sort(key=lambda item: (int(item["start"]), str(item["rule_id"])))

@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 from pathlib import Path
 from typing import Any
 
@@ -12,14 +13,31 @@ from typing import Any
 REVIEWS = {"preserved", "lost", "ask", "unreviewed"}
 
 
-def anchors_in_order(text: str, anchors: list[str]) -> bool:
+def anchor_positions(text: str, anchors: list[str]) -> list[tuple[int, int]] | None:
+    if not anchors:
+        return None
     cursor = 0
+    positions: list[tuple[int, int]] = []
     for anchor in anchors:
         found = text.find(anchor, cursor)
         if found < 0:
-            return False
+            return None
+        positions.append((found, found + len(anchor)))
         cursor = found + len(anchor)
-    return True
+    return positions
+
+
+def anchor_layout(text: str, positions: list[tuple[int, int]] | None) -> dict[str, int] | None:
+    if not positions:
+        return None
+    fragment = text[positions[0][0] : positions[-1][1]]
+    paragraphs = [part for part in re.split(r"\n\s*\n", fragment) if part.strip()]
+    sentence_marks = re.findall(r"[.!?]+", fragment)
+    return {
+        "character_span": positions[-1][1] - positions[0][0],
+        "paragraphs_spanned": max(1, len(paragraphs)),
+        "sentences_spanned": max(1, len(sentence_marks)),
+    }
 
 
 def verify_strength_ledger(
@@ -90,16 +108,30 @@ def verify_strength_ledger(
         baseline_anchors = [str(value) for value in item.get("baseline_anchors", [])]
         candidate_anchors = [str(value) for value in item.get("candidate_anchors", [])]
         review = str(item.get("review", "unreviewed"))
-        baseline_ordered = bool(baseline_anchors) and anchors_in_order(baseline, baseline_anchors)
-        candidate_ordered = bool(candidate_anchors) and anchors_in_order(candidate, candidate_anchors)
-        sequences.append(
-            {
-                "id": item_id,
-                "baseline_ordered": baseline_ordered,
-                "candidate_ordered": candidate_ordered,
-                "review": review,
-            }
+        baseline_positions = anchor_positions(baseline, baseline_anchors)
+        candidate_positions = anchor_positions(candidate, candidate_anchors)
+        baseline_ordered = baseline_positions is not None
+        candidate_ordered = candidate_positions is not None
+        baseline_layout = anchor_layout(baseline, baseline_positions)
+        candidate_layout = anchor_layout(candidate, candidate_positions)
+        layout_compressed = bool(
+            baseline_layout
+            and candidate_layout
+            and (
+                candidate_layout["paragraphs_spanned"] < baseline_layout["paragraphs_spanned"]
+                or candidate_layout["sentences_spanned"] < baseline_layout["sentences_spanned"]
+            )
         )
+        sequence_record: dict[str, object] = {
+            "id": item_id,
+            "baseline_ordered": baseline_ordered,
+            "candidate_ordered": candidate_ordered,
+            "baseline_layout": baseline_layout,
+            "candidate_layout": candidate_layout,
+            "layout_compressed": layout_compressed,
+            "review": review,
+        }
+        sequences.append(sequence_record)
         if not str(item.get("function", "")).strip():
             failures.append(f"{item_id}: function is required")
         if not baseline_ordered:
@@ -110,6 +142,11 @@ def verify_strength_ledger(
             failures.append(f"{item_id}: invalid review value")
         if review != "preserved" or not str(item.get("reviewer_note", "")).strip():
             failures.append(f"{item_id}: human preserved decision and reviewer_note required")
+        if layout_compressed:
+            compression_review = str(item.get("compression_review", "unreviewed"))
+            sequence_record["compression_review"] = compression_review
+            if compression_review != "preserved" or not str(item.get("compression_note", "")).strip():
+                failures.append(f"{item_id}: sequence layout compressed; compression review required")
 
     if not records and not sequences:
         failures.append("ledger has no strengths or sequences")
@@ -121,14 +158,14 @@ def verify_strength_ledger(
     else:
         status = "기계 확인 완료"
     return {
-        "schema_version": "0.1",
+        "schema_version": "0.2",
         "kind": "strength-ledger",
         "status": status,
         "strengths": records,
         "sequences": sequences,
         "failures": failures,
         "requires_human_strength_decision": bool(human_records),
-        "limit": "문자열의 존재와 앵커 순서, 사람이 기록한 판정의 완결성만 확인한다. 표현의 정확성·긴장·문학적 성취를 기계가 판정하지 않는다.",
+        "limit": "문자열의 존재, 앵커 순서, 문단·문장 분포 축소와 사람이 기록한 판정의 완결성만 확인한다. 단계 사이의 실제 경험·논리와 문학적 성취를 기계가 판정하지 않는다.",
     }
 
 

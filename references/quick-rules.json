@@ -1,5 +1,5 @@
 {
-  "schema_version": "0.5",
+  "schema_version": "0.6",
   "purpose": "Deterministic candidate anchors only; they are not authorship signals or automatic rewrite instructions.",
   "rules": [
     {"id": "KH-S01", "anchor_type": "regex", "pattern": "(?:은|는|이|가)\\s+아니라(?!고)", "requires": [], "count_mode": "deterministic", "disposition": "contextual"},
@@ -26,6 +26,7 @@
     {"id": "KH-S34", "anchor_type": "structural", "structural_kind": "meta_discourse", "requires": ["ai_edited"], "count_mode": "deterministic", "disposition": "contextual"},
     {"id": "KH-S35", "anchor_type": "structural", "structural_kind": "return_signal", "requires": ["ai_edited"], "count_mode": "deterministic", "disposition": "contextual"},
     {"id": "KH-S36", "anchor_type": "structural", "structural_kind": "advance_label", "requires": ["ai_edited"], "count_mode": "deterministic", "disposition": "contextual"},
-    {"id": "KH-S37", "anchor_type": "structural", "structural_kind": "emphasis_run", "minimum_run": 3, "requires": ["ai_edited"], "count_mode": "deterministic", "disposition": "contextual"}
+    {"id": "KH-S37", "anchor_type": "structural", "structural_kind": "emphasis_run", "minimum_run": 3, "requires": ["ai_edited"], "count_mode": "deterministic", "disposition": "contextual"},
+    {"id": "KH-S40", "anchor_type": "triadic_chain", "requires": [], "count_mode": "deterministic", "disposition": "contextual"}
   ]
 }

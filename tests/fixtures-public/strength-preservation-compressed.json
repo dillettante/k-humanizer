@@ -1,0 +1,7 @@
+{
+  "kind": "strength_ledger",
+  "before": "strength-preservation-original.md",
+  "after": "strength-preservation-compressed.md",
+  "ledger": "../assets/strength-preservation-ledger.json",
+  "expected_status": "보류"
+}

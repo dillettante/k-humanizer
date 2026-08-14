@@ -1,0 +1,5 @@
+{
+  "kind": "scan",
+  "before": "triadic-chain.txt",
+  "minimum_counts": {"KH-S40": 3}
+}

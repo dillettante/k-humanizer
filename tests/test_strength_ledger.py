@@ -104,3 +104,41 @@ def test_functional_strength_requires_a_located_human_decision() -> None:
 
     assert result["status"] == "사람 판정 기록"
     assert result["failures"] == []
+
+
+def test_ordered_anchors_do_not_hide_sequence_compression() -> None:
+    baseline = "처음에는 지나쳤다.\n\n사흘 뒤 얼룩을 보았다.\n\n그제야 사람이 머문 줄 알았다."
+    candidate = "처음에는 지나쳤지만 사흘 뒤 얼룩을 보고 그제야 사람이 머문 줄 알았다."
+    result = verify_strength_ledger(baseline, candidate, ledger())
+
+    assert result["status"] == "보류"
+    assert "delayed-recognition: sequence layout compressed; compression review required" in result["failures"]
+    assert result["sequences"][0]["baseline_ordered"] is True
+    assert result["sequences"][0]["candidate_ordered"] is True
+    assert result["sequences"][0]["layout_compressed"] is True
+
+
+def test_sequence_compression_can_only_close_with_a_separate_human_reason() -> None:
+    baseline = "처음에는 지나쳤다.\n\n사흘 뒤 얼룩을 보았다.\n\n그제야 사람이 머문 줄 알았다."
+    candidate = "처음에는 지나쳤다. 사흘 뒤 얼룩을 보았다. 그제야 사람이 머문 줄 알았다."
+    sequence_only = {
+        "schema_version": "0.1",
+        "sequences": [
+            {
+                "id": "delayed-recognition",
+                "baseline_anchors": ["처음에는", "사흘 뒤", "그제야"],
+                "candidate_anchors": ["처음에는", "사흘 뒤", "그제야"],
+                "function": "판단이 뒤늦게 형성된다.",
+                "review": "preserved",
+                "reviewer_note": "세 단계의 관찰과 결론이 남았다.",
+                "compression_review": "preserved",
+                "compression_note": "문단만 합쳤고 각 단계는 독립 문장으로 유지했다.",
+            }
+        ],
+    }
+
+    result = verify_strength_ledger(baseline, candidate, sequence_only)
+
+    assert result["status"] == "사람 판정 기록"
+    assert result["failures"] == []
+    assert result["sequences"][0]["compression_review"] == "preserved"
