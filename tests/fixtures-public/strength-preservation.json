@@ -1,0 +1,7 @@
+{
+  "kind": "strength_ledger",
+  "before": "strength-preservation-original.md",
+  "after": "strength-preservation-candidate.md",
+  "ledger": "../assets/strength-preservation-ledger.json",
+  "expected_status": "사람 판정 기록"
+}

@@ -6,7 +6,7 @@
 
 `AI 티를 없애 달라`, `사람이 쓴 것처럼 다듬어 달라`는 요청은 기본적으로 **표준 인간화**로 처리합니다. 진단만 하거나 표지 몇 개만 바꾸지 않고, `빼기 → 다시 짜기 → 목소리 복원`의 세 단계로 완성본을 만듭니다. 이 스킬은 AI 작성 여부를 판별하거나 탐지를 피하도록 돕지 않습니다.
 
-> 상태: v0.6 prototype. 39개 문체·구조 후보, 25개 결정적 앵커, 무수정·신규 표지 gate, Markdown·DOCX 형식 프로필, 반복 윤문 수렴 계약, 다파일 구조 분포·다의어 선별 이관 감사와 전방 비교 검증을 갖췄습니다. 독립적인 맹검 사람 평가는 계속 진행 중입니다.
+> 상태: v0.7 prototype. 39개 문체·구조 후보, 25개 결정적 앵커, 무수정·신규 표지 gate, Markdown·DOCX 형식 프로필, 반복 윤문 수렴 계약, 강점 보존·축약 불가 연쇄, 다파일 구조 분포·다의어 선별 이관 감사와 전방 비교 검증을 갖췄습니다. 독립적인 맹검 사람 평가는 계속 진행 중입니다.
 
 ## 무엇을 하나요
 
@@ -16,6 +16,7 @@
 | 한국어 산문 윤문 | 진단·최소 윤문·표준 인간화·목소리 복원 중 작업 강도를 고릅니다. |
 | 번역투 검토 | 원문이 있으면 자연스러움보다 뜻·주체·부정·양태·논리 관계를 먼저 대조합니다. |
 | 사람이 다듬은 원고 검토 | 억지로 문제를 만들지 않고, 의도한 반복·호흡·형식을 보존합니다. |
+| 저자의 강점 보존 | 낯설지만 정확한 표현, 생산적인 거침, 뒤늦게 형성되는 감정·판단과 남겨 둔 긴장을 편집 전에 고정합니다. |
 | AI 초안 후 편집본 | 장·파일을 가로지르는 메타 발화·회귀 신호·표제문 과밀을 위치·분포와 함께 따로 보고합니다. 단일 횟수만으로 결함이라 판정하지 않습니다. |
 | 파일 형식 보존 | Markdown의 `#`·`**`는 구조로 보존하고, DOCX의 장식성 이모지·굵은 본문·가짜 제목만 따로 진단합니다. |
 | 장문 원고 | manifest와 review ledger로 실제 검사·판정 범위를 남기고, 구조 변경은 확인 요청으로 남깁니다. |
@@ -60,7 +61,8 @@ AI 티가 나는 상투적 전개·기계적 병렬·번역투만 진단해 줘.
 - 모드·입력 내력·장르·파일 형식·번역 원문·보호 구간을 확인합니다.
 - 문체 후보를 위치와 문맥 조건으로만 진단합니다.
 - 표준 인간화는 `빼기 → 다시 짜기 → 목소리 복원`으로 진행합니다.
-- 편집 전 문단별 의미 명세를 만들고, 윤문본의 모든 명제를 원문에 대응시킵니다.
+- 편집 전 강점 대장과 문단별 의미 명세를 만들고, 감정·판단의 누적과 정보 지연은 축약 불가 연쇄로 따로 보호합니다.
+- 윤문본의 모든 명제를 원문에 대응시키고, 지나치게 매끈해져 강점과 긴장이 사라지지 않았는지 확인합니다.
 - 보호값, 목표 표지 감소, 신규 표지, 의미·리듬을 전후 대조합니다.
 
 ## 결정적 안전 검사
@@ -69,8 +71,9 @@ AI 티가 나는 상투적 전개·기계적 병렬·번역투만 진단해 줘.
 
     python3 scripts/scan_style.py --input draft.txt
     python3 scripts/verify_style_gate.py --before draft.txt --after edited.txt --target-rule KH-S02
+    python3 scripts/verify_strength_ledger.py --baseline draft.txt --candidate edited.txt --ledger strength-ledger.json
 
-수정 대상으로 지정한 표지가 줄지 않으면 무수정본도 `보류`다. 문맥상 보존하려면 사람이 확인한 뒤 `--preserve-rule`로 명시한다. 윤문 결과에 다른 표지가 새로 생겨도 통과하지 않는다.
+수정 대상으로 지정한 표지가 줄지 않으면 무수정본도 `보류`다. 문맥상 보존하려면 사람이 확인한 뒤 `--preserve-rule`로 명시한다. 윤문 결과에 다른 표지가 새로 생겨도 통과하지 않는다. 강점 대장 검사는 선언한 문자열과 연쇄의 순서만 확인하며, 표현의 성취는 점수화하지 않는다.
 
 DOCX에서는 Markdown 기호를 문자로 찾지 않고 실제 스타일·굵은 글씨·목록·이모지를 진단한다.
 
@@ -214,7 +217,7 @@ Skills가 보이는 계정에서는 위에서 만든 같은 ZIP을 올릴 수 �
 
 ## 근거와 공개 범위
 
-스킬의 공개 근거 상태와 KCI 조사 방법은 [`references/evidence-status.md`](references/evidence-status.md), [`references/kci-query-manifest.json`](references/kci-query-manifest.json)를 참고하세요. AI 문체 표지의 작동 기준·안전 범위·후보 비교 절차는 [`references/ai-style-taxonomy.md`](references/ai-style-taxonomy.md), [`references/evaluation-contract.md`](references/evaluation-contract.md), [`references/comparison-protocol.md`](references/comparison-protocol.md), [`references/repetition-alternatives.md`](references/repetition-alternatives.md)에 있습니다. API 응답 원문, 자격 증명, 비공개 원고·문체 규칙·스캔본은 저장소에 포함하지 않습니다.
+스킬의 공개 근거 상태와 KCI 조사 방법은 [`references/evidence-status.md`](references/evidence-status.md), [`references/kci-query-manifest.json`](references/kci-query-manifest.json)를 참고하세요. AI 문체 표지의 작동 기준·안전 범위·후보 비교 절차는 [`references/ai-style-taxonomy.md`](references/ai-style-taxonomy.md), [`references/evaluation-contract.md`](references/evaluation-contract.md), [`references/comparison-protocol.md`](references/comparison-protocol.md), [`references/repetition-alternatives.md`](references/repetition-alternatives.md)에 있습니다. 과교정으로 잃기 쉬운 강점과 서사·논증의 순서는 [`references/strength-preservation.md`](references/strength-preservation.md)가 다룹니다. API 응답 원문, 자격 증명, 비공개 원고·문체 규칙·스캔본은 저장소에 포함하지 않습니다.
 
 ## 경계
 

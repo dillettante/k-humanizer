@@ -14,6 +14,7 @@ from verify_style_gate import gate
 from build_review_ledger import build_rows
 from verify_coverage import evaluate
 from audit_term_migration import audit as audit_term_migration
+from verify_strength_ledger import verify_strength_ledger
 
 
 DEFAULT_FIXTURE_DIRS = (
@@ -106,6 +107,11 @@ def run_fixture(fixture: Path) -> dict[str, object]:
             failures.append(f"expected residue count {config.get('expected_residue_count', 0)}, got {result['residue_count']}")
         if int(result["echo_candidate_count"]) < int(config.get("minimum_echo_candidates", 0)):
             failures.append(f"expected at least {config.get('minimum_echo_candidates', 0)} echo candidates, got {result['echo_candidate_count']}")
+    elif config["kind"] == "strength_ledger":
+        after = text_at(fixture, str(config["after"]))
+        ledger = json.loads(text_at(fixture, str(config["ledger"])))
+        result = verify_strength_ledger(before, after, ledger)
+        failures = [] if result["status"] == config["expected_status"] else [f"expected {config['expected_status']}, got {result['status']}"]
     else:
         return {"fixture": fixture.name, "status": "failed", "failures": ["unknown fixture kind"]}
     return {"fixture": fixture.name, "status": "passed" if not failures else "failed", "failures": failures}

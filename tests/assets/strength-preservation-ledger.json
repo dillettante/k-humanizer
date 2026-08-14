@@ -1,0 +1,24 @@
+{
+  "schema_version": "0.1",
+  "strengths": [
+    {
+      "id": "chair-remembers-rain",
+      "baseline_text": "의자는 비를 조금씩 기억하고 있었다.",
+      "position": "첫 문단 둘째 문장",
+      "function": "의자에 남은 시간과 흔적을 한 문장에 압축한다.",
+      "surface_cost": "사물 주어에 기억 술어를 붙여 처음에는 낯설게 읽힌다.",
+      "risk_if_smoothed": "의자가 젖었다는 평범한 상태 설명만 남는다.",
+      "policy": "exact"
+    }
+  ],
+  "sequences": [
+    {
+      "id": "delayed-recognition",
+      "baseline_anchors": ["처음에는", "사흘 뒤", "그제야"],
+      "candidate_anchors": ["처음에는", "사흘 뒤", "그제야"],
+      "function": "사물의 흔적을 사람의 체류로 이해하는 판단이 뒤늦게 형성된다.",
+      "review": "preserved",
+      "reviewer_note": "세 계기가 같은 순서로 남고 결론을 첫 문단으로 당기지 않았다."
+    }
+  ]
+}
