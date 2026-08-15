@@ -6,7 +6,7 @@
 
 `AI 티를 없애 달라`, `사람이 쓴 것처럼 다듬어 달라`는 요청은 기본적으로 **표준 인간화**로 처리합니다. 진단만 하거나 표지 몇 개만 바꾸지 않고, `빼기 → 다시 짜기 → 목소리 복원`의 세 단계로 완성본을 만듭니다. 이 스킬은 AI 작성 여부를 판별하거나 탐지를 피하도록 돕지 않습니다.
 
-> 상태: v0.8 prototype. 40개 문체·구조 후보, 26개 결정적 위치 앵커, 무수정·신규 표지 gate, Markdown·DOCX 형식 프로필, 반복 윤문 수렴 계약, 강점 보존·축약 불가 연쇄, 의미 중복 삼항 연쇄, 다파일 구조 분포·다의어 선별 이관 감사와 전방 비교 검증을 갖췄습니다. 독립적인 맹검 사람 평가는 계속 진행 중입니다.
+> 상태: v0.9 prototype. 40개 문체·구조 후보, 26개 결정적 위치 앵커, 무수정·신규 표지 gate, 문단 리듬·문장 내 연결 연쇄 관찰, 장르 allowlist, 사전 적용 계약, Markdown·DOCX 형식 프로필, 반복 윤문 수렴 계약, 강점 보존·축약 불가 연쇄, 의미 중복 삼항 연쇄, 다파일 구조 분포·다의어 선별 이관 감사와 전방 비교 검증을 갖췄습니다. 독립적인 맹검 사람 평가는 계속 진행 중입니다.
 
 ## 무엇을 하나요
 
@@ -74,6 +74,12 @@ AI 티가 나는 상투적 전개·기계적 병렬·번역투만 진단해 줘.
     python3 scripts/scan_style.py --input draft.txt
     python3 scripts/verify_style_gate.py --before draft.txt --after edited.txt --target-rule KH-S02
     python3 scripts/verify_strength_ledger.py --baseline draft.txt --candidate edited.txt --ledger strength-ledger.json
+
+장르가 요구하는 제목의 대조·약어 병기처럼 반복 보존할 후보는 문단을 통째로 잠그지 말고 rule-level allowlist로 분리합니다. 후보는 결과에 남고, 일반 후보(`counts`)와 장르 예외(`allowed_counts`)만 나뉩니다.
+
+    python3 scripts/scan_style.py --input draft.md --allow-profile genre-allow.json --output scan.json
+
+아직 쓰지 않은 원고에는 [작성 전 점검](references/authoring-preflight.md)으로 측정·보존·과교정 경고를 먼저 만듭니다. 숫자 상한을 임의로 만들지 않고, 초고 뒤 `--provenance rule_guided_draft`로 구조 후보와 문단 리듬을 다시 읽습니다.
 
 수정 대상으로 지정한 표지가 줄지 않으면 무수정본도 `보류`다. 문맥상 보존하려면 사람이 확인한 뒤 `--preserve-rule`로 명시한다. 윤문 결과에 다른 표지가 새로 생겨도 통과하지 않는다. 강점 대장 검사는 선언한 문자열과 연쇄의 순서만 확인하며, 표현의 성취는 점수화하지 않는다.
 

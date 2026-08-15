@@ -8,7 +8,7 @@ import json
 from pathlib import Path
 
 from protected_spans import custom_values
-from scan_style import PROVENANCES, scan
+from scan_style import PROVENANCES, load_allow_profile, scan
 from verify_protected_spans import verify
 
 
@@ -21,10 +21,11 @@ def gate(
     provenance: str = "unknown",
     extra_values: list[str] | None = None,
     preserved_rules: list[str] | None = None,
+    allow_profile: dict[str, object] | None = None,
 ) -> dict[str, object]:
     protected = verify(before, after, extra_values)
-    before_scan = scan(before, translation_source=translation_source, provenance=provenance, extra_values=extra_values)
-    after_scan = scan(after, translation_source=translation_source, provenance=provenance, extra_values=extra_values)
+    before_scan = scan(before, translation_source=translation_source, provenance=provenance, extra_values=extra_values, allow_profile=allow_profile)
+    after_scan = scan(after, translation_source=translation_source, provenance=provenance, extra_values=extra_values, allow_profile=allow_profile)
     all_rules = sorted(set(before_scan["counts"]) | set(after_scan["counts"]))
     delta = {rule_id: int(after_scan["counts"].get(rule_id, 0)) - int(before_scan["counts"].get(rule_id, 0)) for rule_id in all_rules}
     preserved = set(preserved_rules or [])
@@ -53,6 +54,8 @@ def gate(
         "protected": protected,
         "before_counts": before_scan["counts"],
         "after_counts": after_scan["counts"],
+        "before_allowed_counts": before_scan["allowed_counts"],
+        "after_allowed_counts": after_scan["allowed_counts"],
         "delta": delta,
         "target_reduced": reduced,
         "target_preserved": sorted(valid_preserved),
@@ -61,7 +64,7 @@ def gate(
         "target_unresolved": unresolved,
         "target_regressions": regressions,
         "introduced_candidates": introduced,
-        "limit": "목표 앵커의 실제 감소 또는 명시적 보존 판정과 보호값만 검사한다. 의미·장르·리듬의 최종 평가는 독립 검토가 필요하다.",
+        "limit": "목표 앵커의 실제 감소 또는 명시적 보존 판정과 보호값만 검사한다. 장르 allowlist 항목은 별도 보고하며, 의미·장르·리듬의 최종 평가는 독립 검토가 필요하다.",
     }
 
 
@@ -74,6 +77,7 @@ def main() -> int:
     parser.add_argument("--translation-source", action="store_true")
     parser.add_argument("--provenance", choices=PROVENANCES, default="unknown")
     parser.add_argument("--protect-file", type=Path)
+    parser.add_argument("--allow-profile", type=Path)
     parser.add_argument("--output", type=Path)
     args = parser.parse_args()
     result = gate(
@@ -84,6 +88,7 @@ def main() -> int:
         provenance=args.provenance,
         extra_values=custom_values(args.protect_file),
         preserved_rules=args.preserve_rule,
+        allow_profile=load_allow_profile(args.allow_profile),
     )
     rendered = json.dumps(result, ensure_ascii=False, indent=2) + "\n"
     if args.output:

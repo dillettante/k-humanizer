@@ -1,4 +1,4 @@
-# 실행·출력 계약 v0.8
+# 실행·출력 계약 v0.9
 
 ## 입력 계약
 
@@ -6,14 +6,19 @@
 
 | 필드 | 값 |
 | --- | --- |
-| `mode` | `diagnose`, `minimal`, `standard`, `voice_restore` |
-| `provenance` | `raw_ai`, `ai_edited`, `human_draft`, `human_polished`, `unknown` |
+| `mode` | `diagnose`, `minimal`, `standard`, `voice_restore`, `authoring_preflight` |
+| `provenance` | `raw_ai`, `ai_edited`, `human_draft`, `rule_guided_draft`, `human_polished`, `unknown` |
 | `genre` | `book`, `essay`, `column`, `report`, `blog`, `academic`, `legal`, `translation`, `other` |
 | `format` | `plain`, `markdown`, `docx`, `hwp`, `pdf` |
 | `translation_source` | 원문 대조 제공 여부 |
 | `term_map` | 확정 용어의 원어·기존어·확정어·범위·예외를 기록한 파일 또는 없음 |
+| `allow_profile` | 규칙·범위·사유를 선언한 장르 allowlist JSON 또는 없음 |
 
 사용자가 “AI 티 제거”, “ChatGPT 문투를 벗겨”, “사람이 쓴 것처럼”이라고 하면 `standard`를 선택한다. `minimal`은 사용자가 보수적 수정을 명시했을 때만 쓴다. 저자 표본이 있거나 목소리 복원을 강조하면 `voice_restore`를 선택한다.
+
+`authoring_preflight`는 아직 본문이 없을 때만 쓴다. [authoring-preflight.md](authoring-preflight.md)의 측정·보존·재독 브리프를 만들고 본문을 생성하지 않는다. 이 브리프를 읽고 쓴 초고는 `rule_guided_draft`로 기록한다. 이 내력에서는 KH-S34~S37을 함께 스캔하며, 다른 내력에서 건너뛴 규칙은 결과의 `scope_warnings`로 확인한다.
+
+allowlist는 보호와 다르다. 장르상 정당한 규칙 후보를 `counts`에서 분리하지만 finding은 보존한다. 형식·사유·범위는 [genre-allowlist.md](genre-allowlist.md)를 따른다.
 
 ## 진단 계약
 

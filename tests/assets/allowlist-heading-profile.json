@@ -1,0 +1,10 @@
+{
+  "genre": "legal-reference",
+  "allow": [
+    {
+      "rule_id": "KH-S01",
+      "scope": "heading",
+      "reason": "제목의 대조가 논증 형식이다."
+    }
+  ]
+}

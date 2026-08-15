@@ -7,6 +7,7 @@ import argparse
 from bisect import bisect_right
 import json
 import re
+from statistics import median
 import sys
 from pathlib import Path
 
@@ -19,10 +20,15 @@ HTML_COMMENT = re.compile(r"<!--.*?-->", re.DOTALL)
 FENCED_CODE = re.compile(r"(?ms)^```[^\n]*\n.*?^```[ \t]*$")
 PROTECT_START = re.compile(r"<!--\s*k-humanizer:protect-start\s*-->", re.IGNORECASE)
 PROTECT_END = re.compile(r"<!--\s*k-humanizer:protect-end\s*-->", re.IGNORECASE)
-PROVENANCES = ("raw_ai", "ai_edited", "human_draft", "human_polished", "unknown")
+PROVENANCES = ("raw_ai", "ai_edited", "human_draft", "rule_guided_draft", "human_polished", "unknown")
+ALLOW_SCOPES = ("all", "heading", "body", "first_sentence")
 HEADING = re.compile(r"^[ \t]*(#{1,6})[ \t]+(.+?)\s*$")
 SENTENCE = re.compile(r"[^.!?\n]+(?:[.!?]+(?:\*\*)?|$)")
 BOLD = re.compile(r"\*\*([^*\n]{1,72})\*\*")
+BLOCKQUOTE = re.compile(r"^\s*>")
+LIST_ITEM = re.compile(r"^\s*(?:[-+*]|\d+[.)])\s+")
+TABLE_ROW = re.compile(r"^\s*\|.*\|\s*$")
+HORIZONTAL_RULE = re.compile(r"^\s*(?:[-*_]\s*){3,}$")
 
 
 def document_structure(text: str) -> list[dict[str, object]]:
@@ -164,6 +170,128 @@ def input_warnings(text: str) -> list[str]:
     if starts != ends:
         return ["k-humanizer 보호 블록 시작·종료 표지 수가 맞지 않습니다. 해당 범위를 수동으로 확인하십시오."]
     return []
+
+
+def validate_allow_profile(profile: dict[str, object] | None, rule_ids: set[str]) -> dict[str, object] | None:
+    """Validate declarative genre exceptions before they affect reported counts."""
+
+    if profile is None:
+        return None
+    if not isinstance(profile, dict):
+        raise ValueError("allow profile must be a JSON object")
+    genre = profile.get("genre", "")
+    if not isinstance(genre, str) or not genre.strip():
+        raise ValueError("allow profile requires a non-empty genre")
+    entries = profile.get("allow")
+    if not isinstance(entries, list):
+        raise ValueError("allow profile requires an allow list")
+    normalized: list[dict[str, str]] = []
+    seen: set[tuple[str, str]] = set()
+    for position, entry in enumerate(entries, start=1):
+        if not isinstance(entry, dict):
+            raise ValueError(f"allow profile entry {position} must be an object")
+        rule_id = entry.get("rule_id")
+        scope = entry.get("scope")
+        reason = entry.get("reason")
+        if not isinstance(rule_id, str) or rule_id not in rule_ids:
+            raise ValueError(f"allow profile entry {position} has an unknown rule_id")
+        if not isinstance(scope, str) or scope not in ALLOW_SCOPES:
+            raise ValueError(f"allow profile entry {position} scope must be one of: {', '.join(ALLOW_SCOPES)}")
+        if not isinstance(reason, str) or not reason.strip():
+            raise ValueError(f"allow profile entry {position} requires a non-empty reason")
+        key = (rule_id, scope)
+        if key in seen:
+            raise ValueError(f"allow profile repeats rule_id and scope: {rule_id} / {scope}")
+        seen.add(key)
+        normalized.append({"rule_id": rule_id, "scope": scope, "reason": reason.strip()})
+    return {"genre": genre.strip(), "allow": normalized}
+
+
+def load_allow_profile(path: Path | None) -> dict[str, object] | None:
+    """Load a JSON profile; rule IDs are checked by scan after the rule spec loads."""
+
+    if path is None:
+        return None
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(payload, dict):
+        raise ValueError("allow profile must be a JSON object")
+    return payload
+
+
+def allowance_for(item: dict[str, object], profile: dict[str, object] | None) -> dict[str, str] | None:
+    """Return the first declared genre exception that fits a finding's location."""
+
+    if profile is None:
+        return None
+    for entry in profile["allow"]:
+        scope = str(entry["scope"])
+        matches = (
+            scope == "all"
+            or (scope == "heading" and item["paragraph_kind"] == "heading")
+            or (scope == "body" and item["paragraph_kind"] == "body")
+            or (scope == "first_sentence" and item["paragraph_kind"] == "body" and bool(item["is_paragraph_first"]))
+        )
+        if matches and item["rule_id"] == entry["rule_id"]:
+            return {"scope": scope, "reason": str(entry["reason"])}
+    return None
+
+
+def paragraph_rhythm(structure: list[dict[str, object]], scan_text: str) -> dict[str, object]:
+    """Describe prose paragraph rhythm with an explicit, non-normative population."""
+
+    excluded = {"heading": 0, "blockquote": 0, "list": 0, "table": 0, "horizontal_rule": 0}
+    sentence_counts: list[int] = []
+    for paragraph in structure:
+        if paragraph["kind"] == "heading":
+            excluded["heading"] += 1
+            continue
+        raw = scan_text[int(paragraph["start"]) : int(paragraph["end"])].strip()
+        if BLOCKQUOTE.match(raw):
+            excluded["blockquote"] += 1
+            continue
+        lines = [line for line in raw.splitlines() if line.strip()]
+        if lines and all(LIST_ITEM.match(line) for line in lines):
+            excluded["list"] += 1
+            continue
+        if lines and all(TABLE_ROW.match(line) for line in lines):
+            excluded["table"] += 1
+            continue
+        if HORIZONTAL_RULE.match(raw):
+            excluded["horizontal_rule"] += 1
+            continue
+        sentence_counts.append(len(paragraph["sentences"]))
+    count = len(sentence_counts)
+    single = sum(value == 1 for value in sentence_counts)
+    return {
+        "population": "Markdown body paragraphs excluding headings, blockquotes, lists, tables, and horizontal rules",
+        "paragraph_count": count,
+        "sentence_count": sum(sentence_counts),
+        "single_sentence_paragraph_count": single,
+        "single_sentence_paragraph_ratio": round(single / count, 4) if count else None,
+        "mean_sentences_per_paragraph": round(sum(sentence_counts) / count, 4) if count else None,
+        "median_sentences_per_paragraph": median(sentence_counts) if count else None,
+        "excluded_paragraphs": excluded,
+        "limit": "관찰용 리듬 지표다. 장르·문단 기능을 무시한 상한이나 통과 기준으로 쓰지 않는다.",
+    }
+
+
+def sentence_rule_distribution(findings: list[dict[str, object]]) -> dict[str, dict[str, int]]:
+    """Show clustering inside a sentence, not only document-wide anchor totals."""
+
+    slots: dict[str, dict[tuple[str, int, int], int]] = {}
+    for item in findings:
+        rule_id = str(item["rule_id"])
+        slot = (str(item.get("document_id", "single-input")), int(item["paragraph"]), int(item["sentence_in_paragraph"]))
+        by_slot = slots.setdefault(rule_id, {})
+        by_slot[slot] = by_slot.get(slot, 0) + 1
+    return {
+        rule_id: {
+            "sentences_with_findings": len(counts),
+            "sentences_with_2plus": sum(value >= 2 for value in counts.values()),
+            "max_per_sentence": max(counts.values()),
+        }
+        for rule_id, counts in sorted(slots.items())
+    }
 
 
 def sentence_run_findings(
@@ -362,10 +490,12 @@ def scan(
     translation_source: bool = False,
     provenance: str = "unknown",
     extra_values: list[str] | None = None,
+    allow_profile: dict[str, object] | None = None,
 ) -> dict[str, object]:
     if provenance not in PROVENANCES:
         raise ValueError(f"provenance must be one of: {', '.join(PROVENANCES)}")
     rules = json.loads(RULES_PATH.read_text(encoding="utf-8"))["rules"]
+    profile = validate_allow_profile(allow_profile, {str(rule["id"]) for rule in rules})
     protected = protected_spans(text, extra_values)
     scan_text, masked = non_prose_mask(text)
     structure = document_structure(scan_text)
@@ -377,8 +507,8 @@ def scan(
         if "translation_source" in rule.get("requires", []) and not translation_source:
             skipped.append({"rule_id": rule_id, "reason": "원문 대조가 확인되지 않아 번역투 앵커를 스캔하지 않음"})
             continue
-        if "ai_edited" in rule.get("requires", []) and provenance != "ai_edited":
-            skipped.append({"rule_id": rule_id, "reason": "후편집 수사·구조 후보는 ai_edited 입력에서만 스캔함"})
+        if "ai_edited" in rule.get("requires", []) and provenance not in {"ai_edited", "rule_guided_draft"}:
+            skipped.append({"rule_id": rule_id, "reason": "후편집 수사·구조 후보는 ai_edited 또는 rule_guided_draft 입력에서만 스캔함"})
             continue
         scanned.append(rule_id)
         if rule["anchor_type"] == "regex":
@@ -392,26 +522,60 @@ def scan(
         elif rule["anchor_type"] == "structural":
             findings.extend(structural_findings(rule, text, scan_text, protected, structure))
     findings.sort(key=lambda item: (int(item["start"]), str(item["rule_id"])))
-    counts: dict[str, int] = {}
+    active_findings: list[dict[str, object]] = []
+    allowed_findings: list[dict[str, object]] = []
     for item in findings:
+        allowance = allowance_for(item, profile)
+        if allowance is None:
+            item["allowed"] = False
+            active_findings.append(item)
+            continue
+        item.update({"allowed": True, "allow_scope": allowance["scope"], "allow_reason": allowance["reason"]})
+        allowed_findings.append(item)
+    counts: dict[str, int] = {}
+    allowed_counts: dict[str, int] = {}
+    all_counts: dict[str, int] = {}
+    for item in active_findings:
         rule_id = str(item["rule_id"])
         counts[rule_id] = counts.get(rule_id, 0) + 1
-    distribution, repeats = distributions(findings)
+    for item in allowed_findings:
+        rule_id = str(item["rule_id"])
+        allowed_counts[rule_id] = allowed_counts.get(rule_id, 0) + 1
+    for item in findings:
+        rule_id = str(item["rule_id"])
+        all_counts[rule_id] = all_counts.get(rule_id, 0) + 1
+    distribution, repeats = distributions(active_findings)
+    allowed_distribution, allowed_repeats = distributions(allowed_findings)
+    scope_warnings = []
+    if skipped:
+        skipped_ids = ", ".join(item["rule_id"] for item in skipped)
+        scope_warnings.append(f"{len(skipped)}개 규칙을 스캔하지 않았습니다 ({skipped_ids}). 이 결과는 해당 규칙군의 전수 진단이 아닙니다.")
     return {
-        "schema_version": "0.2",
+        "schema_version": "0.3",
         "kind": "style-candidate-scan",
         "translation_source": translation_source,
         "provenance": provenance,
         "scanned_rules": scanned,
         "skipped_rules": skipped,
+        "scope_warnings": scope_warnings,
         "protected_spans_excluded": len(protected),
         "non_prose_masked": masked,
         "input_warnings": input_warnings(text),
         "counts": counts,
+        "allowed_counts": allowed_counts,
+        "all_counts": all_counts,
         "counts_by_evidence": {rule_id: row["evidence"] for rule_id, row in distribution.items()},
         "rule_distribution": distribution,
+        "allowed_rule_distribution": allowed_distribution,
         "cross_document_repeats": repeats,
-        "structural_summary": {"paragraph_count": len(structure), "body_paragraph_count": sum(item["kind"] == "body" for item in structure)},
+        "allowed_cross_document_repeats": allowed_repeats,
+        "per_sentence_rule_distribution": sentence_rule_distribution(active_findings),
+        "structural_summary": {
+            "paragraph_count": len(structure),
+            "body_paragraph_count": sum(item["kind"] == "body" for item in structure),
+            "paragraph_rhythm": paragraph_rhythm(structure, scan_text),
+        },
+        "allow_profile": None if profile is None else {"genre": profile["genre"], "entry_count": len(profile["allow"])},
         "findings": findings,
         "limit": "결정적 앵커의 위치 후보일 뿐, 저자 판별·품질 점수·자동 수정 지시가 아님",
     }
@@ -423,6 +587,7 @@ def scan_manifest(
     translation_source: bool = False,
     provenance: str = "unknown",
     extra_values: list[str] | None = None,
+    allow_profile: dict[str, object] | None = None,
 ) -> dict[str, object]:
     """Scan included documents and retain an auditable corpus receipt."""
 
@@ -433,6 +598,8 @@ def scan_manifest(
     document_ids: set[str] = set()
     findings: list[dict[str, object]] = []
     counts: dict[str, int] = {}
+    allowed_counts: dict[str, int] = {}
+    all_counts: dict[str, int] = {}
     scanned_documents: list[dict[str, object]] = []
     excluded_documents: list[dict[str, object]] = []
     for position, document in enumerate(documents, start=1):
@@ -464,14 +631,19 @@ def scan_manifest(
             translation_source=translation_source,
             provenance=provenance,
             extra_values=extra_values,
+            allow_profile=allow_profile,
         )
         receipt.update(
             {
                 "characters": len(document_text),
                 "finding_count": len(result["findings"]),
+                "candidate_finding_count": sum(result["counts"].values()),
+                "allowed_finding_count": sum(result["allowed_counts"].values()),
                 "protected_spans_excluded": result["protected_spans_excluded"],
                 "non_prose_masked": result["non_prose_masked"],
                 "input_warnings": result["input_warnings"],
+                "scope_warnings": result["scope_warnings"],
+                "paragraph_rhythm": result["structural_summary"]["paragraph_rhythm"],
             }
         )
         scanned_documents.append(receipt)
@@ -480,11 +652,23 @@ def scan_manifest(
             item["document_id"] = document_id
             findings.append(item)
             rule_id = str(item["rule_id"])
-            counts[rule_id] = counts.get(rule_id, 0) + 1
+            all_counts[rule_id] = all_counts.get(rule_id, 0) + 1
+            if bool(item.get("allowed")):
+                allowed_counts[rule_id] = allowed_counts.get(rule_id, 0) + 1
+            else:
+                counts[rule_id] = counts.get(rule_id, 0) + 1
     findings.sort(key=lambda item: (str(item["document_id"]), int(item["start"]), str(item["rule_id"])))
-    distribution, repeats = distributions(findings)
+    active_findings = [item for item in findings if not bool(item.get("allowed"))]
+    allowed_findings = [item for item in findings if bool(item.get("allowed"))]
+    distribution, repeats = distributions(active_findings)
+    allowed_distribution, allowed_repeats = distributions(allowed_findings)
+    scope_warnings = [
+        {"document_id": item["document_id"], "warnings": item["scope_warnings"]}
+        for item in scanned_documents
+        if item.get("scope_warnings")
+    ]
     return {
-        "schema_version": "0.2",
+        "schema_version": "0.3",
         "kind": "style-candidate-scan",
         "translation_source": translation_source,
         "provenance": provenance,
@@ -493,9 +677,16 @@ def scan_manifest(
         "documents_scanned": scanned_documents,
         "documents_excluded": excluded_documents,
         "counts": counts,
+        "allowed_counts": allowed_counts,
+        "all_counts": all_counts,
         "counts_by_evidence": {rule_id: row["evidence"] for rule_id, row in distribution.items()},
         "rule_distribution": distribution,
+        "allowed_rule_distribution": allowed_distribution,
         "cross_document_repeats": repeats,
+        "allowed_cross_document_repeats": allowed_repeats,
+        "per_sentence_rule_distribution": sentence_rule_distribution(active_findings),
+        "scope_warnings": scope_warnings,
+        "allow_profile": None if allow_profile is None else {"genre": str(allow_profile.get("genre", "")), "entry_count": len(allow_profile.get("allow", []))},
         "findings": findings,
         "limit": "결정적 앵커의 위치 후보일 뿐, 저자 판별·품질 점수·자동 수정 지시가 아님",
     }
@@ -510,13 +701,14 @@ def main() -> int:
     parser.add_argument("--translation-source", action="store_true", help="대조할 번역 원문이 제공되었음을 표시")
     parser.add_argument("--provenance", choices=PROVENANCES, default="unknown", help="입력의 작성·편집 내력")
     parser.add_argument("--protect-file", type=Path, help="줄마다 추가 보호할 문자열")
+    parser.add_argument("--allow-profile", type=Path, help="규칙별 장르 예외를 선언한 JSON 파일")
     parser.add_argument("--output", type=Path, help="JSON 결과 파일; 생략하면 표준 출력")
     args = parser.parse_args()
     if args.manifest:
-        result = scan_manifest(args.manifest, translation_source=args.translation_source, provenance=args.provenance, extra_values=custom_values(args.protect_file))
+        result = scan_manifest(args.manifest, translation_source=args.translation_source, provenance=args.provenance, extra_values=custom_values(args.protect_file), allow_profile=load_allow_profile(args.allow_profile))
     else:
         text = args.input.read_text(encoding="utf-8") if args.input else str(args.text)
-        result = scan(text, translation_source=args.translation_source, provenance=args.provenance, extra_values=custom_values(args.protect_file))
+        result = scan(text, translation_source=args.translation_source, provenance=args.provenance, extra_values=custom_values(args.protect_file), allow_profile=load_allow_profile(args.allow_profile))
     rendered = json.dumps(result, ensure_ascii=False, indent=2) + "\n"
     if args.output:
         args.output.write_text(rendered, encoding="utf-8")

@@ -1,0 +1,7 @@
+{
+  "kind": "scan",
+  "before": "allowlist-heading.txt",
+  "allow_profile": "../assets/allowlist-heading-profile.json",
+  "minimum_counts": {"KH-S01": 1},
+  "minimum_allowed_counts": {"KH-S01": 1}
+}

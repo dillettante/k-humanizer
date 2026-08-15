@@ -31,7 +31,8 @@ def test_post_editing_structural_candidates_have_location_metadata() -> None:
     result = scan(POST_EDITED_SAMPLE, provenance="ai_edited")
 
     assert result["counts"] == {"KH-S34": 2, "KH-S35": 1, "KH-S36": 1, "KH-S37": 1}
-    assert result["structural_summary"] == {"paragraph_count": 7, "body_paragraph_count": 7}
+    assert result["structural_summary"]["paragraph_count"] == 7
+    assert result["structural_summary"]["body_paragraph_count"] == 7
     meta = result["findings"][0]
     assert {"paragraph", "sentence_in_paragraph", "is_paragraph_first", "is_paragraph_last", "paragraph_kind", "section_heading", "is_document_last"} <= set(meta)
     assert meta["paragraph"] == 1
@@ -44,6 +45,48 @@ def test_post_editing_candidates_do_not_run_without_ai_edited_provenance() -> No
     assert not result["counts"]
     skipped = {item["rule_id"] for item in result["skipped_rules"]}
     assert {"KH-S34", "KH-S35", "KH-S36", "KH-S37"} <= skipped
+    assert result["scope_warnings"]
+
+
+def test_rule_guided_draft_scans_structural_candidates() -> None:
+    result = scan(POST_EDITED_SAMPLE, provenance="rule_guided_draft")
+
+    assert result["counts"]["KH-S37"] == 1
+    assert "KH-S34" in result["scanned_rules"]
+
+
+def test_paragraph_rhythm_excludes_markdown_non_prose_population() -> None:
+    text = "# 제목\n\n한 문장이다.\n\n둘째 문장이다. 셋째 문장이다.\n\n> 인용문이다.\n\n- 목록 항목이다.\n\n| 열 | 값 |\n| --- | --- |\n| 하나 | 둘 |\n\n---\n"
+    rhythm = scan(text)["structural_summary"]["paragraph_rhythm"]
+
+    assert rhythm["paragraph_count"] == 2
+    assert rhythm["single_sentence_paragraph_count"] == 1
+    assert rhythm["single_sentence_paragraph_ratio"] == 0.5
+    assert rhythm["excluded_paragraphs"] == {"heading": 1, "blockquote": 1, "list": 1, "table": 1, "horizontal_rule": 1}
+
+
+def test_allow_profile_separates_genre_exception_without_hiding_finding() -> None:
+    text = "### 규제지역은 하나가 아니라 셋이다.\n\n본문은 하나가 아니라 셋이다.\n"
+    profile = {
+        "genre": "legal-reference",
+        "allow": [{"rule_id": "KH-S01", "scope": "heading", "reason": "제목의 대조가 논증 형식이다."}],
+    }
+    result = scan(text, allow_profile=profile)
+
+    assert result["counts"] == {"KH-S01": 1}
+    assert result["allowed_counts"] == {"KH-S01": 1}
+    assert result["all_counts"] == {"KH-S01": 2}
+    allowed = [item for item in result["findings"] if item["allowed"]]
+    assert allowed[0]["allow_scope"] == "heading"
+    assert allowed[0]["allow_reason"] == "제목의 대조가 논증 형식이다."
+
+
+def test_s07_reports_sentence_clustering_not_only_total_count() -> None:
+    result = scan("자료를 모으고, 분류하며, 검증했다. 다음 날 다시 읽고, 메모했다.")
+
+    distribution = result["per_sentence_rule_distribution"]["KH-S07"]
+    assert result["counts"]["KH-S07"] == 3
+    assert distribution == {"sentences_with_findings": 2, "sentences_with_2plus": 1, "max_per_sentence": 2}
 
 
 def test_manifest_reports_cross_document_structural_repeats(tmp_path: Path) -> None:

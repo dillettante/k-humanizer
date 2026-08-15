@@ -27,24 +27,40 @@ def text_at(fixture: Path, name: str) -> str:
     return (fixture.parent / name).read_text(encoding="utf-8")
 
 
+def allow_profile_at(fixture: Path, config: dict[str, object]) -> dict[str, object] | None:
+    name = config.get("allow_profile")
+    if name is None:
+        return None
+    payload = json.loads(text_at(fixture, str(name)))
+    if not isinstance(payload, dict):
+        raise ValueError("allow_profile fixture must be a JSON object")
+    return payload
+
+
 def run_fixture(fixture: Path) -> dict[str, object]:
     config = json.loads(fixture.read_text(encoding="utf-8"))
     before = text_at(fixture, str(config["before"]))
+    allow_profile = allow_profile_at(fixture, config)
     if config["kind"] == "scan":
         result = scan(
             before,
             translation_source=bool(config.get("translation_source")),
             provenance=str(config.get("provenance", "unknown")),
+            allow_profile=allow_profile,
         )
         expected = {str(key): int(value) for key, value in config.get("minimum_counts", {}).items()}
         failures = [f"{rule_id}: expected >= {minimum}, got {result['counts'].get(rule_id, 0)}" for rule_id, minimum in expected.items() if int(result["counts"].get(rule_id, 0)) < minimum]
         unexpected = [rule_id for rule_id in config.get("absent_rules", []) if result["counts"].get(rule_id, 0)]
         failures.extend(f"{rule_id}: expected no finding" for rule_id in unexpected)
+        for rule_id, minimum in config.get("minimum_allowed_counts", {}).items():
+            if int(result["allowed_counts"].get(rule_id, 0)) < int(minimum):
+                failures.append(f"{rule_id}: expected allowed >= {minimum}, got {result['allowed_counts'].get(rule_id, 0)}")
     elif config["kind"] == "manifest":
         result = scan_manifest(
             fixture.parent / str(config["manifest"]),
             translation_source=bool(config.get("translation_source")),
             provenance=str(config.get("provenance", "unknown")),
+            allow_profile=allow_profile,
         )
         failures = []
         if len(result["documents_scanned"]) != int(config["expected_scanned"]):
@@ -66,6 +82,7 @@ def run_fixture(fixture: Path) -> dict[str, object]:
             provenance=str(config.get("provenance", "unknown")),
             extra_values=None,
             preserved_rules=list(config.get("preserved_rules", [])),
+            allow_profile=allow_profile,
         )
         failures = [] if result["status"] == config["expected_status"] else [f"expected {config['expected_status']}, got {result['status']}"]
     elif config["kind"] == "comparison":

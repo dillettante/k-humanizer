@@ -15,8 +15,9 @@ description: "한국어 초안의 AI식 상투구, 번역투, 추상 명사화, 
 | `최소 윤문` | `최소`, `보수적으로`, 특정 패턴만 명시 | 결정적인 표지만 국소 수정 |
 | `표준 인간화` | AI 티·ChatGPT 문투 제거, 자연스럽게, 사람이 쓴 것처럼 | 지배 패턴을 문장·문단 단위로 해체하고 윤문본을 완성 |
 | `목소리 복원` | 저자 표본·이전 원고를 함께 제공하거나 목소리 보존을 강조 | 같은 저자의 강한 구간에서 로컬 기준선을 만들고 그 범위 안에서 윤문 |
+| `사전 적용` | 아직 쓰지 않은 원고를 이 원칙에 맞춰 쓰려 함 | [작성 전 점검](references/authoring-preflight.md)으로 측정 항목·보존 목록·과교정 경고를 만들고 본문은 쓰지 않음 |
 
-모드별 세부 계약은 [references/runtime-contract.md](references/runtime-contract.md)를 읽어라. 입력의 내력은 `raw_ai`, `ai_edited`, `human_draft`, `human_polished`, `unknown` 중 하나로 기록하라. `human_polished`에서는 문제가 없다는 결론을 허용하되, 사용자가 표준 인간화를 명시했으면 확인된 지배 패턴을 그대로 두지 마라.
+모드별 세부 계약은 [references/runtime-contract.md](references/runtime-contract.md)를 읽어라. 입력의 내력은 `raw_ai`, `ai_edited`, `human_draft`, `rule_guided_draft`, `human_polished`, `unknown` 중 하나로 기록하라. `rule_guided_draft`는 사전 적용 브리프를 읽고 쓴 초고이며, 후편집 구조 후보도 함께 스캔한다. `human_polished`에서는 문제가 없다는 결론을 허용하되, 사용자가 표준 인간화를 명시했으면 확인된 지배 패턴을 그대로 두지 마라.
 
 ## 2. 입력과 범위를 고정하라
 
@@ -24,8 +25,9 @@ description: "한국어 초안의 AI식 상투구, 번역투, 추상 명사화, 
 2. 단행본·연재물·다파일 원고는 편집 브리프와 manifest를 만들고 목차·서지·각주·부록을 산문에서 분리하라.
 3. 전문 검토를 명시하면 [references/full-corpus-review.md](references/full-corpus-review.md)의 구간 대장을 사용하라. 끝낼 수 없으면 부분 검토·전수 앵커 검토 같은 합리적인 대안을 제시하라.
 4. 파일 형식별 처리는 [references/format-profiles.md](references/format-profiles.md)를 따르라. Markdown의 제목·굵은 표지·이모지·코드 펜스는 사용자가 서식 재설계를 요청하지 않는 한 삭제·이동·이름 변경하지 마라. DOCX는 의미 있는 스타일과 장식성 서식을 구분하라.
-5. 이미 K-humanizer로 고친 글을 다시 검수하면 최초 입력을 `baseline`, 직전 채택본을 `previous`로 고정하고 회차를 기록하라. 직전본만 보고 다시 쓰지 마라.
-6. 번역 용어나 표준어를 책 전체에서 바꾸면 [references/terminology-migration.md](references/terminology-migration.md)를 읽고 원어·기존어·확정어·범위·예외를 term map으로 고정하라. 같은 기존어가 문맥에 따라 다른 개념이면 [references/selective-terminology.md](references/selective-terminology.md)로 모든 용례의 `replace·preserve·ask` 결정을 기록하라. 확정어 자체는 보호하되 주변 문장은 다시 읽어라.
+5. 장르가 요구하는 문형·제목·약어 병기처럼 반복적으로 보존할 규칙은 `--protect-file`로 문단 전체를 잠그지 말고 [references/genre-allowlist.md](references/genre-allowlist.md)의 rule-level allowlist로 선언하라. allowlist는 검출을 숨기지 않고 후보와 예외를 분리해 보고한다.
+6. 이미 K-humanizer로 고친 글을 다시 검수하면 최초 입력을 `baseline`, 직전 채택본을 `previous`로 고정하고 회차를 기록하라. 직전본만 보고 다시 쓰지 마라.
+7. 번역 용어나 표준어를 책 전체에서 바꾸면 [references/terminology-migration.md](references/terminology-migration.md)를 읽고 원어·기존어·확정어·범위·예외를 term map으로 고정하라. 같은 기존어가 문맥에 따라 다른 개념이면 [references/selective-terminology.md](references/selective-terminology.md)로 모든 용례의 `replace·preserve·ask` 결정을 기록하라. 확정어 자체는 보호하되 주변 문장은 다시 읽어라.
 
 ## 3. 보호하고 진단하라
 
@@ -55,8 +57,9 @@ description: "한국어 초안의 AI식 상투구, 번역투, 추상 명사화, 
 1. `scripts/verify_protected_spans.py`로 보호값을 확인하라.
 2. Markdown은 `scripts/verify_markdown_structure.py`로 제목·굵은 표지·이모지·코드 펜스 보존을 확인하라.
 3. 수정 대상으로 삼은 결정적 규칙은 `scripts/verify_style_gate.py --target-rule ...`로 실제 감소를 확인하라. 그대로 둔 규칙은 사람이 문맥을 확인한 뒤에만 `--preserve-rule`로 통과시켜라.
-4. 목표 표지가 줄지 않은 무수정 결과, 다른 문체 표지를 새로 만든 결과, 보호값이나 Markdown 구조를 잃은 결과는 채택하지 마라.
-5. 사실·주체·부정·양태·인과·귀속·누락·격식·목소리를 원문과 대조하라. 윤문본의 명제가 편집 전 `의미 명세`에 없으면 지우거나 `ask`로 남겨라. 강화뿐 아니라 약화도 실패다. `상호작용`을 `반응`으로 줄이거나, `중요하다`를 `도움이 된다`로 낮추거나, `~한다`를 `~할 수 있다`로 바꾸지 마라. 변경률은 경보일 뿐 품질 점수가 아니다.
+4. `scan_style.py`의 `paragraph_rhythm`과 KH-S07의 `per_sentence_rule_distribution`을 전후 대조하라. 한 문장 문단 비율이나 연결어미 총계를 상한으로 삼지 말고, 문단 기능과 한 문장 안의 연쇄를 다시 읽어라.
+5. 목표 표지가 줄지 않은 무수정 결과, 다른 문체 표지를 새로 만든 결과, 보호값이나 Markdown 구조를 잃은 결과는 채택하지 마라.
+6. 사실·주체·부정·양태·인과·귀속·누락·격식·목소리를 원문과 대조하라. 윤문본의 명제가 편집 전 `의미 명세`에 없으면 지우거나 `ask`로 남겨라. 강화뿐 아니라 약화도 실패다. `상호작용`을 `반응`으로 줄이거나, `중요하다`를 `도움이 된다`로 낮추거나, `~한다`를 `~할 수 있다`로 바꾸지 마라. 변경률은 경보일 뿐 품질 점수가 아니다.
 6. 수정 대상으로 판정한 위치에 `중요한 과정·핵심 수단·효율적으로·실천적 과제·시사점을 제공`같은 공식 포장이 그대로 남거나 유사어로 바뀌었으면 채택하지 마라. 원문의 평가 강도는 직접 서술로 한 번만 남기고 중복 포장을 없애라.
 7. 두 후보를 비교할 때에는 [references/comparison-protocol.md](references/comparison-protocol.md)를 따르고, 결정적 gate 뒤에 순서를 가린 사람 평가를 하라.
 8. `긴밀히 맞물린다·능동적으로 상호작용한다·삶을 풍요롭게 한다·성장을 위한 핵심 습관` 같은 중요성·성장 결산 묶음이 한 문단이나 결론에 남았는지 다시 보라. 각각이 자연스러워도 한꺼번에 몰리면 KH-S32의 `edit` 후보이며, 짧은 유사어 치환으로 통과시키지 마라.
