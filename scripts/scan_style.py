@@ -379,7 +379,8 @@ def structural_findings(
     if kind == "meta_discourse":
         patterns = (
             (re.compile(r"(?:이|이런)\s*(?:글|장|절)(?:은|에서는?)\s*[^.!?\n]{0,60}(?:장이다|이야기다|다룬다|시작한다|핵심이다|쓴다)"), "장·절 선언", "이 장은 __다."),
-            (re.compile(r"(?:이제|먼저|여기서)\s+[^.!?\n]{0,48}(?:하자|두자|밝힌다|정리하자|살펴보자|이야기하자|짚고\s*가자|말해\s*두자|시작하자|긋자|듣자|들자|넘어가자)"), "메타 청유", "메타 지시: __"),
+            (re.compile(r"(?:이제|먼저|여기서)\s+[^.!?\n]{0,48}(?:하자|두자|정리하자|살펴보자|이야기하자|짚고\s*가자|말해\s*두자|시작하자|긋자|듣자|들자|넘어가자)"), "메타 청유형 도입", "메타 청유: __"),
+            (re.compile(r"(?:이제|먼저|여기서)\s+[^.!?\n]{0,48}밝힌다"), "메타 평서", "메타 지시: __"),
             (re.compile(r"(?:전제|기준|뜻|범위)[^.!?\n]{0,24}(?:밝힌다|정리한다|정해\s*두자)"), "논지 예고", "논지 예고: __"),
         )
         for paragraph in structure:
@@ -418,6 +419,59 @@ def structural_findings(
             for pattern, label, shape in patterns:
                 for match in pattern.finditer(raw):
                     add(start + match.start(), start + match.end(), f"{label}: {match.group(0)}", shape)
+    elif kind == "nominalization_echo":
+        # 용언으로 쓴 것을 바로 뒤에서 「그 + 명사형(-ㅁ)」으로 되받는 자리다.
+        # 「안목은 자라고 … 그 자람에」·「내가 틀린 것 … 그 틀림이」.
+        #
+        # 왜 정규식 하나로 안 되는가 — 결함의 조건이 「낱말의 꼴」이 아니라
+        # 「앞에 같은 어간의 용언이 있었는가」라는 관계이기 때문이다. 그래서
+        # ① 「그 X + 조사」로 후보를 모으고 ② X의 어간을 만들어 ③ 같은 문장 안에서 찾는다.
+        #
+        # 어간 만들기: 한글 음절은 (초성×21 + 중성)×28 + 종성으로 짜여 있다.
+        # 종성만 0으로 돌리면 「람」→「라」가 된다(28로 나눈 나머지를 뺀다).
+        # 그리고 「틀리」는 「틀린」과 글자가 달라 그대로는 못 찾으므로,
+        # 마지막 음절을 「종성만 다른 28자」의 범위로 열어 둔다 — 그 28자가
+        # 코드포인트 상 연속이라 정규식 문자 범위 하나로 표현된다.
+        # 널리 정착한 명사는 단순한 형태 일치만으로 후보가 되면 안 된다. 이 목록은
+        # 사전이 아니라 흔한 오탐을 막는 보수적 차단 목록이며, 나머지도 자동 수정하지 않는다.
+        settled = {"사람", "마음", "다음", "처음", "이름", "때문", "삶", "다짐", "믿음",
+                   "죽음", "웃음", "울음", "걸음", "도움", "쓰임", "살림", "즐거움", "아쉬움",
+                   "다름", "부끄러움", "어려움", "두려움", "그리움", "느낌", "생각"}
+        josa = r"(?:이|가|은|는|을|를|에|에서|으로|로|도|만|과|와|까지|부터|조차)"
+        pattern = re.compile(rf"그\s+([가-힣]{{2,6}})\s*{josa}(?![가-힣])")
+
+        def stem_pattern(noun: str) -> str | None:
+            """명사형에서 종성 ㅁ을 떼어 어간을 만들고, 마지막 음절을 종성 무관으로 연다."""
+            last = noun[-1]
+            if not ("가" <= last <= "힣") or (ord(last) - 0xAC00) % 28 != 16:
+                return None                                  # ㅁ 받침이 아니면 명사형이 아니다
+            base = ord(last) - (ord(last) - 0xAC00) % 28     # 「람」 → 「라」
+            head = noun[:-1]
+            if not head:
+                return None
+            return re.escape(head) + f"[{chr(base)}-{chr(base + 27)}]"
+
+        for paragraph in structure:
+            if paragraph["kind"] != "body":
+                continue
+            start = int(paragraph["start"])
+            for match in pattern.finditer(scan_text[start : int(paragraph["end"])]):
+                noun = match.group(1)
+                if noun in settled:
+                    continue
+                probe = stem_pattern(noun)
+                if probe is None:
+                    continue
+                absolute = start + match.start()
+                # 멀리 떨어진 동형어는 대개 다른 논점이다. 같은 문장 안의 가까운
+                # 되받기만 위치 후보로 남겨 과도한 전역 어간 일치를 피한다.
+                sentence_start = max(scan_text.rfind(marker, 0, absolute) for marker in ".!?\n") + 1
+                window = scan_text[max(sentence_start, absolute - 64) : absolute]
+                echo = re.search(probe, window)
+                if echo:
+                    add(absolute, start + match.end(),
+                        f"명사형 되받기: 「{echo.group(0)}…」 → 「{match.group(0)}」",
+                        "…Vㅁ … 그 Vㅁ")
     elif kind == "emphasis_run":
         minimum = int(rule.get("minimum_run", 3))
         # A Markdown essay normally puts each bold lead in its own paragraph.

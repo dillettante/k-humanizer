@@ -30,7 +30,7 @@ def build(path: Path) -> dict[str, object]:
             raise ValueError(f"{rule['id']} requires minimum_run >= 2")
         elif anchor_type == "structural":
             kind = rule.get("structural_kind")
-            if kind not in {"meta_discourse", "return_signal", "advance_label", "emphasis_run"}:
+            if kind not in {"meta_discourse", "return_signal", "advance_label", "emphasis_run", "nominalization_echo"}:
                 raise ValueError(f"{rule['id']} requires a supported structural_kind")
             if kind == "emphasis_run" and int(rule.get("minimum_run", 0)) < 2:
                 raise ValueError(f"{rule['id']} requires minimum_run >= 2")

@@ -1,0 +1,6 @@
+{
+  "kind": "scan",
+  "before": "nominalization-echo.txt",
+  "provenance": "unknown",
+  "minimum_counts": {"KH-S41": 1}
+}

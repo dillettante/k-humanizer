@@ -1,32 +1,232 @@
 {
-  "schema_version": "0.6",
+  "schema_version": "0.7",
   "purpose": "Deterministic candidate anchors only; they are not authorship signals or automatic rewrite instructions.",
   "rules": [
-    {"id": "KH-S01", "anchor_type": "regex", "pattern": "(?:은|는|이|가)\\s+아니라(?!고)", "requires": [], "count_mode": "deterministic", "disposition": "contextual"},
-    {"id": "KH-S02", "anchor_type": "regex", "pattern": "결론적으로|요약하면|정리하자면|종합하면|시사하는 바가 크다", "requires": [], "count_mode": "deterministic", "disposition": "contextual"},
-    {"id": "KH-S03", "anchor_type": "regex", "pattern": "첫째|둘째|셋째|넷째|다섯째", "requires": [], "count_mode": "deterministic", "disposition": "contextual"},
-    {"id": "KH-S04", "anchor_type": "regex", "pattern": "(?<![가-힣])(?:한편(?:으로)?|또한|다만|즉|나아가|아울러|다시\\s+말해)(?![가-힣])(?:\\s*(?:,|，))?", "requires": [], "count_mode": "deterministic", "disposition": "contextual"},
-    {"id": "KH-S06", "anchor_type": "regex", "pattern": "(?:에\\s*의해|에\\s*의하여|에\\s*의한)", "requires": ["translation_source"], "count_mode": "deterministic", "disposition": "contextual"},
-    {"id": "KH-S07", "anchor_type": "regex", "pattern": "(?:며|고|지만|는데|면서)\\s*,", "requires": [], "count_mode": "deterministic", "disposition": "contextual"},
-    {"id": "KH-S08", "anchor_type": "sentence_run", "minimum_run": 3, "requires": [], "count_mode": "deterministic", "disposition": "contextual"},
-    {"id": "KH-S09", "anchor_type": "regex", "pattern": "(?:할 수 있다|가능성이 있다|(?:로|으로) 보인다|라고 여겨진다)", "requires": [], "count_mode": "deterministic", "disposition": "contextual"},
-    {"id": "KH-S11", "anchor_type": "regex", "pattern": "(?:에\\s*대해(?:서)?|에\\s*대하여|에\\s*관하여|와\\s*관련하여|과\\s*관련하여)", "requires": [], "count_mode": "deterministic", "disposition": "contextual"},
-    {"id": "KH-S12", "anchor_type": "regex", "pattern": "(?:을|를)\\s*(?:통해|통하여)", "requires": [], "count_mode": "deterministic", "disposition": "contextual"},
-    {"id": "KH-S13", "anchor_type": "regex", "pattern": "(?:(?:다는|라는)\\s*(?:점|것)|(?:할|해야\\s*할)\\s*필요가\\s*있다)", "requires": [], "count_mode": "deterministic", "disposition": "contextual"},
-    {"id": "KH-S15", "anchor_type": "regex", "pattern": "(?:되어진|되어지|보여진|보여지|이루어진|이루어지|만들어진|만들어지)", "requires": [], "count_mode": "deterministic", "disposition": "contextual"},
-    {"id": "KH-S16", "anchor_type": "regex", "pattern": "[가-힣][가-힣 ]{0,24}\\([A-Za-z][A-Za-z0-9 .&/+_-]{2,}\\)", "requires": [], "count_mode": "deterministic", "disposition": "contextual"},
-    {"id": "KH-S17", "anchor_type": "regex", "pattern": "(?:매우\\s+중요|주목할\\s+만|혁신적|획기적|전례\\s+없는)", "requires": [], "count_mode": "deterministic", "disposition": "contextual"},
-    {"id": "KH-S18", "anchor_type": "regex", "pattern": "(?:을|를)?\\s*넘어\\s+[^,.!?\\n]{1,30}(?:로|으로)", "requires": [], "count_mode": "deterministic", "disposition": "contextual"},
-    {"id": "KH-S19", "anchor_type": "regex", "pattern": "(?m)^[ \\t]*(?:이는|이것은|이러한)(?:[ \\t]|,)", "requires": [], "count_mode": "deterministic", "disposition": "contextual"},
-    {"id": "KH-S20", "anchor_type": "regex", "pattern": "(?:을|를|기)\\s*위해(?:서)?", "requires": [], "count_mode": "deterministic", "disposition": "contextual"},
-    {"id": "KH-S21", "anchor_type": "regex", "pattern": "(?:중요하고\\s+핵심적|핵심적이고\\s+중요|역할과\\s+기능|기능과\\s+역할|적\\s+(?:측면|관점))", "requires": [], "count_mode": "deterministic", "disposition": "contextual"},
-    {"id": "KH-S26", "anchor_type": "regex", "pattern": "(?:(?:다는|라는)\\s*것이다|(?:할|해야\\s*할)\\s*필요가\\s*있다)", "requires": [], "count_mode": "deterministic", "disposition": "contextual"},
-    {"id": "KH-S27", "anchor_type": "regex", "pattern": "(?m)(?:이\\s*(?:글|장|절)에서는?)[^.!?\\n]{0,80}(?:살펴본다|다룬다|알아본다)", "requires": [], "count_mode": "deterministic", "disposition": "contextual"},
-    {"id": "KH-S32", "anchor_type": "regex", "pattern": "(?:긴밀(?:히|하게)\\s+(?:연결|맞물)|능동적(?:으로|인)\\s+(?:상호작용|참여)|체계적(?:으로|인)\\s+(?:정리|분석|접근|관리|기록|적어)|(?:삶|문화|경험|논의)(?:을|를)\\s+풍요롭게|(?:성장|발전)(?:을|의)\\s+위한\\s+(?:핵심|중요한)\\s+(?:습관|수단|과정)|(?:핵심|중요한)\\s+(?:습관|수단|과정)(?:으로)?\\s+(?:인식|받아들))", "requires": [], "count_mode": "deterministic", "disposition": "contextual"},
-    {"id": "KH-S34", "anchor_type": "structural", "structural_kind": "meta_discourse", "requires": ["ai_edited"], "count_mode": "deterministic", "disposition": "contextual"},
-    {"id": "KH-S35", "anchor_type": "structural", "structural_kind": "return_signal", "requires": ["ai_edited"], "count_mode": "deterministic", "disposition": "contextual"},
-    {"id": "KH-S36", "anchor_type": "structural", "structural_kind": "advance_label", "requires": ["ai_edited"], "count_mode": "deterministic", "disposition": "contextual"},
-    {"id": "KH-S37", "anchor_type": "structural", "structural_kind": "emphasis_run", "minimum_run": 3, "requires": ["ai_edited"], "count_mode": "deterministic", "disposition": "contextual"},
-    {"id": "KH-S40", "anchor_type": "triadic_chain", "requires": [], "count_mode": "deterministic", "disposition": "contextual"}
+    {
+      "id": "KH-S01",
+      "anchor_type": "regex",
+      "pattern": "(?:은|는|이|가)\\s+아니라(?!고)",
+      "requires": [],
+      "count_mode": "deterministic",
+      "disposition": "contextual"
+    },
+    {
+      "id": "KH-S02",
+      "anchor_type": "regex",
+      "pattern": "결론적으로|요약하면|정리하자면|종합하면|시사하는 바가 크다",
+      "requires": [],
+      "count_mode": "deterministic",
+      "disposition": "contextual"
+    },
+    {
+      "id": "KH-S03",
+      "anchor_type": "regex",
+      "pattern": "첫째|둘째|셋째|넷째|다섯째",
+      "requires": [],
+      "count_mode": "deterministic",
+      "disposition": "contextual"
+    },
+    {
+      "id": "KH-S04",
+      "anchor_type": "regex",
+      "pattern": "(?<![가-힣])(?:한편(?:으로)?|또한|다만|즉|나아가|아울러|다시\\s+말해)(?![가-힣])(?:\\s*(?:,|，))?",
+      "requires": [],
+      "count_mode": "deterministic",
+      "disposition": "contextual"
+    },
+    {
+      "id": "KH-S06",
+      "anchor_type": "regex",
+      "pattern": "(?:에\\s*의해|에\\s*의하여|에\\s*의한)",
+      "requires": [
+        "translation_source"
+      ],
+      "count_mode": "deterministic",
+      "disposition": "contextual"
+    },
+    {
+      "id": "KH-S07",
+      "anchor_type": "regex",
+      "pattern": "(?:며|고|지만|는데|면서)\\s*,",
+      "requires": [],
+      "count_mode": "deterministic",
+      "disposition": "contextual"
+    },
+    {
+      "id": "KH-S08",
+      "anchor_type": "sentence_run",
+      "minimum_run": 3,
+      "requires": [],
+      "count_mode": "deterministic",
+      "disposition": "contextual"
+    },
+    {
+      "id": "KH-S09",
+      "anchor_type": "regex",
+      "pattern": "(?:할 수 있다|가능성이 있다|(?:로|으로) 보인다|라고 여겨진다)",
+      "requires": [],
+      "count_mode": "deterministic",
+      "disposition": "contextual"
+    },
+    {
+      "id": "KH-S11",
+      "anchor_type": "regex",
+      "pattern": "(?:에\\s*대해(?:서)?|에\\s*대하여|에\\s*관하여|와\\s*관련하여|과\\s*관련하여)",
+      "requires": [],
+      "count_mode": "deterministic",
+      "disposition": "contextual"
+    },
+    {
+      "id": "KH-S12",
+      "anchor_type": "regex",
+      "pattern": "(?:을|를)\\s*(?:통해|통하여)",
+      "requires": [],
+      "count_mode": "deterministic",
+      "disposition": "contextual"
+    },
+    {
+      "id": "KH-S13",
+      "anchor_type": "regex",
+      "pattern": "(?:(?:다는|라는)\\s*(?:점|것)|(?:할|해야\\s*할)\\s*필요가\\s*있다)",
+      "requires": [],
+      "count_mode": "deterministic",
+      "disposition": "contextual"
+    },
+    {
+      "id": "KH-S15",
+      "anchor_type": "regex",
+      "pattern": "(?:되어진|되어지|보여진|보여지|이루어진|이루어지|만들어진|만들어지)",
+      "requires": [],
+      "count_mode": "deterministic",
+      "disposition": "contextual"
+    },
+    {
+      "id": "KH-S16",
+      "anchor_type": "regex",
+      "pattern": "[가-힣][가-힣 ]{0,24}\\([A-Za-z][A-Za-z0-9 .&/+_-]{2,}\\)",
+      "requires": [],
+      "count_mode": "deterministic",
+      "disposition": "contextual"
+    },
+    {
+      "id": "KH-S17",
+      "anchor_type": "regex",
+      "pattern": "(?:매우\\s+중요|주목할\\s+만|혁신적|획기적|전례\\s+없는)",
+      "requires": [],
+      "count_mode": "deterministic",
+      "disposition": "contextual"
+    },
+    {
+      "id": "KH-S18",
+      "anchor_type": "regex",
+      "pattern": "(?:을|를)?\\s*넘어\\s+[^,.!?\\n]{1,30}(?:로|으로)",
+      "requires": [],
+      "count_mode": "deterministic",
+      "disposition": "contextual"
+    },
+    {
+      "id": "KH-S19",
+      "anchor_type": "regex",
+      "pattern": "(?m)^[ \\t]*(?:이는|이것은|이러한)(?:[ \\t]|,)",
+      "requires": [],
+      "count_mode": "deterministic",
+      "disposition": "contextual"
+    },
+    {
+      "id": "KH-S20",
+      "anchor_type": "regex",
+      "pattern": "(?:을|를|기)\\s*위해(?:서)?",
+      "requires": [],
+      "count_mode": "deterministic",
+      "disposition": "contextual"
+    },
+    {
+      "id": "KH-S21",
+      "anchor_type": "regex",
+      "pattern": "(?:중요하고\\s+핵심적|핵심적이고\\s+중요|역할과\\s+기능|기능과\\s+역할|적\\s+(?:측면|관점))",
+      "requires": [],
+      "count_mode": "deterministic",
+      "disposition": "contextual"
+    },
+    {
+      "id": "KH-S26",
+      "anchor_type": "regex",
+      "pattern": "(?:(?:다는|라는)\\s*것이다|(?:할|해야\\s*할)\\s*필요가\\s*있다)",
+      "requires": [],
+      "count_mode": "deterministic",
+      "disposition": "contextual"
+    },
+    {
+      "id": "KH-S27",
+      "anchor_type": "regex",
+      "pattern": "(?m)(?:이\\s*(?:글|장|절)에서는?)[^.!?\\n]{0,80}(?:살펴본다|다룬다|알아본다)",
+      "requires": [],
+      "count_mode": "deterministic",
+      "disposition": "contextual"
+    },
+    {
+      "id": "KH-S32",
+      "anchor_type": "regex",
+      "pattern": "(?:긴밀(?:히|하게)\\s+(?:연결|맞물)|능동적(?:으로|인)\\s+(?:상호작용|참여)|체계적(?:으로|인)\\s+(?:정리|분석|접근|관리|기록|적어)|(?:삶|문화|경험|논의)(?:을|를)\\s+풍요롭게|(?:성장|발전)(?:을|의)\\s+위한\\s+(?:핵심|중요한)\\s+(?:습관|수단|과정)|(?:핵심|중요한)\\s+(?:습관|수단|과정)(?:으로)?\\s+(?:인식|받아들))",
+      "requires": [],
+      "count_mode": "deterministic",
+      "disposition": "contextual"
+    },
+    {
+      "id": "KH-S34",
+      "anchor_type": "structural",
+      "structural_kind": "meta_discourse",
+      "requires": [
+        "ai_edited"
+      ],
+      "count_mode": "deterministic",
+      "disposition": "contextual"
+    },
+    {
+      "id": "KH-S35",
+      "anchor_type": "structural",
+      "structural_kind": "return_signal",
+      "requires": [
+        "ai_edited"
+      ],
+      "count_mode": "deterministic",
+      "disposition": "contextual"
+    },
+    {
+      "id": "KH-S36",
+      "anchor_type": "structural",
+      "structural_kind": "advance_label",
+      "requires": [
+        "ai_edited"
+      ],
+      "count_mode": "deterministic",
+      "disposition": "contextual"
+    },
+    {
+      "id": "KH-S37",
+      "anchor_type": "structural",
+      "structural_kind": "emphasis_run",
+      "minimum_run": 3,
+      "requires": [
+        "ai_edited"
+      ],
+      "count_mode": "deterministic",
+      "disposition": "contextual"
+    },
+    {
+      "id": "KH-S40",
+      "anchor_type": "triadic_chain",
+      "requires": [],
+      "count_mode": "deterministic",
+      "disposition": "contextual"
+    },
+    {
+      "id": "KH-S41",
+      "anchor_type": "structural",
+      "structural_kind": "nominalization_echo",
+      "requires": [],
+      "count_mode": "deterministic",
+      "disposition": "contextual"
+    }
   ]
 }

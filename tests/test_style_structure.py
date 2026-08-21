@@ -158,3 +158,26 @@ def test_triadic_chain_does_not_split_words_or_quotative_endings() -> None:
     result = scan(text)
 
     assert "KH-S40" not in result["counts"]
+
+
+def test_nominalization_echo_is_a_local_candidate_only() -> None:
+    result = scan("안목은 자라고 그 자람에 따라 판단도 달라졌다. 그는 오래 살았고 그 삶을 돌아봤다.")
+
+    assert result["counts"] == {"KH-S41": 1}
+    finding = result["findings"][0]
+    assert finding["rule_id"] == "KH-S41"
+    assert "명사형 되받기" in finding["evidence"]
+
+
+def test_nominalization_echo_does_not_cross_sentence_boundaries() -> None:
+    result = scan("안목은 자랐다. 판단이 달라졌다. 그 자람에 따라 결론도 달라졌다.")
+
+    assert "KH-S41" not in result["counts"]
+
+
+def test_meta_discourse_labels_form_without_preservation_verdict() -> None:
+    result = scan("이제 이유를 살펴보자.\n\n먼저 조건을 밝힌다.", provenance="ai_edited")
+
+    assert result["counts"] == {"KH-S34": 2}
+    evidence = {item["evidence"].split(":", 1)[0] for item in result["findings"]}
+    assert evidence == {"메타 청유형 도입", "메타 평서"}
